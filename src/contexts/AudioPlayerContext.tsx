@@ -12,6 +12,8 @@ import {
 } from "../services/audioPlayerApi";
 import { Song } from "../types";
 import { JellyfinApiService } from "../services/jellyfinApi";
+import { QueueManager } from "../services/queueManager";
+import { QueueSource, QueueItem } from "../types/queue";
 
 interface AudioPlayerState {
   currentSong?: Song;
@@ -28,6 +30,7 @@ interface AudioPlayerState {
 interface AudioPlayerContextType {
   // State
   state: AudioPlayerState;
+  queueVersion: number; // For triggering re-renders when queue changes
 
   // Actions
   playSong: (songId: string) => Promise<void>;
@@ -42,6 +45,27 @@ interface AudioPlayerContextType {
   refreshState: () => Promise<void>;
   startSeeking: () => void;
   stopSeeking: () => void;
+
+  // Queue management
+  createQueueFromSource: (
+    songs: Song[],
+    source: QueueSource,
+    shuffle?: boolean,
+    startIndex?: number
+  ) => Promise<void>;
+  addToQueue: (song: Song, position?: "next" | "end") => void;
+  removeFromQueue: (songId: string) => boolean;
+  getQueue: () => QueueItem[];
+  getQueueStats: () => {
+    total: number;
+    current: number;
+    manual: number;
+    source: QueueSource;
+  };
+  clearQueue: () => void;
+  clearSavedQueue: () => void;
+  jumpToSong: (songId: string) => Promise<void>;
+  reorderQueue: (fromSongId: string, toIndex: number) => boolean;
 
   // Recently played
   getRecentlyPlayed: () => Song[];
@@ -82,33 +106,78 @@ const getCachedVolume = (): number => {
   return 0.7; // Default volume
 };
 
-const initialState: AudioPlayerState = {
-  currentSong: undefined,
-  isPlaying: false,
-  progress: 0,
-  duration: 0,
-  volume: getCachedVolume(),
-  isShuffled: false,
-  repeatMode: "none",
-  isLoading: false,
-  isSeeking: false,
+// Load initial state including saved shuffle/repeat from queue
+const getInitialState = (): AudioPlayerState => {
+  let isShuffled = false;
+  let repeatMode: "none" | "one" | "all" = "none";
+
+  // Try to load shuffle and repeat state from saved queue
+  try {
+    const saved = localStorage.getItem("bloodin_queue_state");
+    const version = localStorage.getItem("bloodin_queue_version");
+
+    if (saved && version === "1.0") {
+      const parsedState = JSON.parse(saved);
+      if (parsedState && typeof parsedState.isShuffled === "boolean") {
+        isShuffled = parsedState.isShuffled;
+      }
+      if (
+        parsedState &&
+        ["none", "one", "all"].includes(parsedState.repeatMode)
+      ) {
+        repeatMode = parsedState.repeatMode;
+      }
+    }
+  } catch (error) {
+    console.error("Failed to load shuffle/repeat state:", error);
+  }
+
+  return {
+    currentSong: undefined,
+    isPlaying: false,
+    progress: 0,
+    duration: 0,
+    volume: getCachedVolume(),
+    isShuffled,
+    repeatMode,
+    isLoading: false,
+    isSeeking: false,
+  };
 };
+
+const initialState: AudioPlayerState = getInitialState();
 
 export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [state, setState] = useState<AudioPlayerState>(initialState);
+  const [queueVersion, setQueueVersion] = useState(0);
   const [recentlyPlayed, setRecentlyPlayed] = useState<Song[]>(() => {
     // Load recently played from localStorage
     try {
       const saved = localStorage.getItem("bloodin_recently_played");
-      if (saved) {
-        return JSON.parse(saved);
+      const version = localStorage.getItem("bloodin_recently_played_version");
+
+      if (saved && version === "1.1") {
+        const parsed = JSON.parse(saved);
+        // Verify that all songs have artistIds (at least for new data structure)
+        if (Array.isArray(parsed) && parsed.length === 0) {
+          return parsed; // Empty array is fine
+        }
+        return parsed;
+      } else {
+        // Clear old data that doesn't have artist IDs
+        console.log(
+          "🔄 Migrating recently played songs - clearing old data without artist IDs"
+        );
+        localStorage.removeItem("bloodin_recently_played");
+        localStorage.setItem("bloodin_recently_played_version", "1.1");
+        return [];
       }
     } catch (error) {
       console.error("Failed to load recently played songs:", error);
+      return [];
     }
-    return [];
   });
 
   const [lastPlayedSong, setLastPlayedSong] = useState<{
@@ -130,6 +199,12 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   // Cache for album art to prevent re-fetching the same image
   const albumArtCache = useRef<Map<string, string | undefined>>(new Map());
   const currentSongRef = useRef<Song | undefined>(undefined);
+  const queueManager = useRef<QueueManager>(new QueueManager());
+  const previousStateRef = useRef<{
+    progress: number;
+    duration: number;
+    isPlaying: boolean;
+  }>({ progress: 0, duration: 0, isPlaying: false });
 
   // Save recently played to localStorage whenever it changes
   useEffect(() => {
@@ -138,6 +213,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         "bloodin_recently_played",
         JSON.stringify(recentlyPlayed)
       );
+      localStorage.setItem("bloodin_recently_played_version", "1.1");
     } catch (error) {
       console.error("Failed to save recently played songs:", error);
     }
@@ -203,6 +279,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         album: song.album,
         duration: song.duration,
         albumArt,
+        artistIds: song.artistIds, // Preserve artist IDs for navigation
       };
     },
     []
@@ -242,6 +319,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
                 artist: convertedState.currentSong.artist,
                 album: convertedState.currentSong.album,
                 duration: convertedState.currentSong.duration,
+                artistIds: convertedState.currentSong.artistIds, // Preserve artist IDs
               }
             : await enhanceSongWithAlbumArt(convertedState.currentSong);
         }
@@ -251,15 +329,15 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         currentSongRef.current = undefined;
       }
 
-      console.log("🎵 Audio Player State Update:", {
-        currentSong: enhancedSong?.title,
-        isPlaying: convertedState.isPlaying,
-        progress: convertedState.currentPosition,
-        duration: convertedState.duration,
-        volume: convertedState.volume,
-        songChanged:
-          currentSongRef.current?.id !== convertedState.currentSong?.id,
-      });
+      // console.log("🎵 Audio Player State Update:", {
+      //   currentSong: enhancedSong?.title,
+      //   isPlaying: convertedState.isPlaying,
+      //   progress: convertedState.currentPosition,
+      //   duration: convertedState.duration,
+      //   volume: convertedState.volume,
+      //   songChanged:
+      //     currentSongRef.current?.id !== convertedState.currentSong?.id,
+      // });
 
       setState((prev) => ({
         ...prev,
@@ -268,8 +346,9 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         progress: convertedState.currentPosition,
         duration: convertedState.duration,
         volume: convertedState.volume,
-        isShuffled: convertedState.isShuffled,
-        repeatMode: convertedState.repeatMode,
+        // Preserve frontend-managed shuffle and repeat state
+        // isShuffled: convertedState.isShuffled,  // Don't override frontend queue state
+        // repeatMode: convertedState.repeatMode,  // Don't override frontend queue state
       }));
     } catch (error) {
       console.error("Failed to refresh audio player state:", error);
@@ -287,6 +366,18 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         );
       } catch (error) {
         console.error("Failed to initialize volume:", error);
+      }
+
+      // Log restored shuffle and repeat state
+      try {
+        const queueState = queueManager.current.getState();
+        if (queueState.currentOrder.length > 0) {
+          console.log(
+            `🔄 Restored queue with shuffle: ${queueState.isShuffled}, repeat: ${queueState.repeatMode}`
+          );
+        }
+      } catch (error) {
+        console.error("Failed to log restored state:", error);
       }
 
       // Refresh state to sync everything
@@ -398,12 +489,13 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const toggleShuffle = useCallback(async () => {
     try {
-      await AudioPlayerAPI.toggleShuffle();
-      await refreshState();
+      const newShuffleState = queueManager.current.toggleShuffle();
+      setState((prev) => ({ ...prev, isShuffled: newShuffleState }));
+      console.log(`🎵 Shuffle ${newShuffleState ? "enabled" : "disabled"}`);
     } catch (error) {
       console.error("Failed to toggle shuffle:", error);
     }
-  }, [refreshState]);
+  }, []);
 
   const toggleRepeat = useCallback(async () => {
     try {
@@ -411,30 +503,67 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
       const currentIndex = modes.indexOf(state.repeatMode);
       const nextMode = modes[(currentIndex + 1) % modes.length];
 
-      await AudioPlayerAPI.setRepeatMode(nextMode);
-      await refreshState();
+      queueManager.current.setRepeatMode(nextMode);
+      setState((prev) => ({ ...prev, repeatMode: nextMode }));
+      console.log(`🎵 Repeat mode: ${nextMode}`);
     } catch (error) {
       console.error("Failed to toggle repeat:", error);
     }
-  }, [state.repeatMode, refreshState]);
+  }, [state.repeatMode]);
 
   const nextTrack = useCallback(async () => {
     try {
-      await AudioPlayerAPI.nextTrack();
-      await refreshState();
+      const nextSong = queueManager.current.advanceToNext();
+      if (nextSong) {
+        console.log(`🎵 Next track: ${nextSong.title}`);
+        await playSong(nextSong.id);
+
+        // Sync UI state with queue manager state
+        const queueState = queueManager.current.getState();
+        setState((prev) => ({
+          ...prev,
+          isShuffled: queueState.isShuffled,
+          repeatMode: queueState.repeatMode,
+        }));
+
+        setQueueVersion((prev) => prev + 1);
+      } else {
+        console.log("🎵 End of queue reached");
+        await stop();
+      }
     } catch (error) {
       console.error("Failed to go to next track:", error);
     }
-  }, [refreshState]);
+  }, [playSong, stop]);
 
   const previousTrack = useCallback(async () => {
     try {
-      await AudioPlayerAPI.previousTrack();
-      await refreshState();
+      const result = queueManager.current.getPreviousSong(state.progress);
+
+      if (result.action === "restart") {
+        console.log("🎵 Restarting current song");
+        await seekTo(0);
+      } else if (result.song) {
+        console.log(`🎵 Previous track: ${result.song.title}`);
+        await playSong(result.song.id);
+
+        // Sync UI state with queue manager state
+        const queueState = queueManager.current.getState();
+        setState((prev) => ({
+          ...prev,
+          isShuffled: queueState.isShuffled,
+          repeatMode: queueState.repeatMode,
+        }));
+
+        setQueueVersion((prev) => prev + 1);
+      } else {
+        console.log("🎵 No previous song available");
+        await seekTo(0); // Just restart current song as fallback
+      }
     } catch (error) {
       console.error("Failed to go to previous track:", error);
     }
-  }, [refreshState]);
+  }, [state.progress, playSong, seekTo]);
 
   const startSeeking = useCallback(() => {
     setState((prev) => ({ ...prev, isSeeking: true }));
@@ -470,8 +599,157 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [lastPlayedSong, playSong, seekTo]);
 
+  // Queue management methods
+  const createQueueFromSource = useCallback(
+    async (
+      songs: Song[],
+      source: QueueSource,
+      shuffle: boolean = false,
+      startIndex: number = 0
+    ) => {
+      try {
+        console.log(
+          `🎵 Creating queue from ${source.type}:`,
+          source.name || source.id
+        );
+
+        // Create the queue
+        queueManager.current.createQueue(songs, source, shuffle, startIndex);
+
+        // Start playing the first song in the queue
+        const firstSong = queueManager.current.getCurrentSong();
+        if (firstSong) {
+          await playSong(firstSong.id);
+        }
+
+        // Update shuffle state to match queue
+        setState((prev) => ({ ...prev, isShuffled: shuffle }));
+
+        // Trigger re-render
+        setQueueVersion((prev) => prev + 1);
+      } catch (error) {
+        console.error("Failed to create queue:", error);
+      }
+    },
+    [playSong]
+  );
+
+  const addToQueue = useCallback(
+    (song: Song, position: "next" | "end" = "end") => {
+      queueManager.current.addToQueue(song, position);
+      console.log(`🎵 Added "${song.title}" to queue (position: ${position})`);
+      setQueueVersion((prev) => prev + 1);
+    },
+    []
+  );
+
+  const removeFromQueue = useCallback((songId: string): boolean => {
+    const success = queueManager.current.removeFromQueue(songId);
+    if (success) {
+      console.log(`🎵 Removed song ${songId} from queue`);
+      setQueueVersion((prev) => prev + 1);
+    }
+    return success;
+  }, []);
+
+  const getQueue = useCallback((): QueueItem[] => {
+    return queueManager.current.getVisibleQueue();
+  }, []);
+
+  const getQueueStats = useCallback(() => {
+    return queueManager.current.getQueueStats();
+  }, []);
+
+  const clearQueue = useCallback(() => {
+    queueManager.current.clearQueue();
+    console.log("🎵 Cleared queue");
+    setQueueVersion((prev) => prev + 1);
+  }, []);
+
+  const clearSavedQueue = useCallback(() => {
+    queueManager.current.clearSavedQueue();
+    console.log("🎵 Cleared saved queue state");
+  }, []);
+
+  const jumpToSong = useCallback(
+    async (songId: string) => {
+      try {
+        const targetSong = queueManager.current.jumpToSong(songId);
+        if (targetSong) {
+          console.log(`🎵 Jumping to song in queue: ${targetSong.title}`);
+          await playSong(targetSong.id);
+
+          // Sync UI state with queue manager state
+          const queueState = queueManager.current.getState();
+          setState((prev) => ({
+            ...prev,
+            isShuffled: queueState.isShuffled,
+            repeatMode: queueState.repeatMode,
+          }));
+
+          setQueueVersion((prev) => prev + 1);
+        } else {
+          console.warn(`Song ${songId} not found in queue`);
+          // Fallback to direct play if not in queue
+          await playSong(songId);
+        }
+      } catch (error) {
+        console.error("Failed to jump to song:", error);
+      }
+    },
+    [playSong]
+  );
+
+  const reorderQueue = useCallback((fromSongId: string, toIndex: number) => {
+    const success = queueManager.current.reorderQueue(fromSongId, toIndex);
+    if (success) {
+      console.log(`🎵 Reordered song ${fromSongId} to index ${toIndex}`);
+      setQueueVersion((prev) => prev + 1);
+    }
+    return success;
+  }, []);
+
+  // Auto-advance to next track when current song ends
+  useEffect(() => {
+    const prevState = previousStateRef.current;
+
+    // Detect if song just ended: was playing before, has valid duration, reached end, not playing now
+    const songJustEnded =
+      prevState.isPlaying && // Was playing before
+      !state.isPlaying && // Not playing now
+      state.duration > 0 && // Has a valid duration
+      state.progress >= state.duration - 1 && // Within 1 second of end
+      state.currentSong; // Has a current song
+
+    // Update previous state for next comparison
+    previousStateRef.current = {
+      progress: state.progress,
+      duration: state.duration,
+      isPlaying: state.isPlaying,
+    };
+
+    // Auto-advance if song just ended and repeat mode isn't "one"
+    if (songJustEnded && state.repeatMode !== "one") {
+      console.log(
+        `🎵 Song "${state.currentSong?.title}" ended, auto-advancing to next track`
+      );
+      // Use setTimeout to avoid any potential state update conflicts
+      setTimeout(() => {
+        nextTrack();
+      }, 100);
+    }
+  }, [
+    state.progress,
+    state.duration,
+    state.isPlaying,
+    state.currentSong,
+    state.repeatMode,
+    nextTrack,
+  ]);
+
   const contextValue: AudioPlayerContextType = {
     state,
+    queueVersion,
     playSong,
     playPause,
     stop,
@@ -487,6 +765,15 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     getRecentlyPlayed,
     getLastPlayedSong,
     resumeLastSong,
+    createQueueFromSource,
+    addToQueue,
+    removeFromQueue,
+    getQueue,
+    getQueueStats,
+    clearQueue,
+    clearSavedQueue,
+    jumpToSong,
+    reorderQueue,
   };
 
   return (

@@ -628,11 +628,19 @@ pub async fn play_song(
         vec!["Unknown Artist".to_string()]
     };
 
+    // Extract artist IDs
+    let artist_ids = if let Some(ref artist_items) = song_details.artist_items {
+        Some(artist_items.iter().map(|item| item.id.clone()).collect())
+    } else {
+        None
+    };
+
     // Create queue item with real song data (use cached URL if available)
     let queue_item = QueueItem {
         id: item_id.clone(),
         name: song_details.name.clone(),
         artists: artists.clone(),
+        artist_ids: artist_ids.clone(),
         album: song_details.album.clone(),
         duration_ticks: song_details.runtime_ticks,
         stream_url: cached_url.clone(),
@@ -659,6 +667,7 @@ pub async fn play_song(
                     id: item_id.clone(),
                     name: song_details.name.clone(),
                     artists: artists.clone(),
+                    artist_ids: artist_ids.clone(),
                     album: song_details.album.clone(),
                     duration_ticks: song_details.runtime_ticks,
                     stream_url: stream_url,
@@ -920,6 +929,49 @@ pub async fn get_artist_songs(
         Err(e) => Ok(MusicLibraryResult {
             success: false,
             message: format!("Failed to get artist songs: {}", e),
+            items: None,
+            total_count: None,
+        }),
+    }
+}
+
+#[tauri::command]
+pub async fn get_playlist_songs(
+    playlist_id: String,
+    limit: Option<i32>,
+    start_index: Option<i32>,
+    state: State<'_, AppState>,
+) -> Result<MusicLibraryResult, String> {
+    let client_config = {
+        let client = state.jellyfin_client.lock().map_err(|e| e.to_string())?;
+        client.get_config().cloned()
+    };
+
+    let config = match client_config {
+        Some(config) => config,
+        None => {
+            return Ok(MusicLibraryResult {
+                success: false,
+                message: "Not authenticated".to_string(),
+                items: None,
+                total_count: None,
+            });
+        }
+    };
+
+    let mut client = JellyfinClient::new();
+    client.set_config(config);
+
+    match client.get_playlist_songs(&playlist_id, limit, start_index).await {
+        Ok(response) => Ok(MusicLibraryResult {
+            success: true,
+            message: "Playlist songs retrieved successfully".to_string(),
+            items: Some(response.items),
+            total_count: Some(response.total_record_count),
+        }),
+        Err(e) => Ok(MusicLibraryResult {
+            success: false,
+            message: format!("Failed to get playlist songs: {}", e),
             items: None,
             total_count: None,
         }),

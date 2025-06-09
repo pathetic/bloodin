@@ -15,6 +15,7 @@ export interface QueueItem {
   id: string;
   name: string;
   artists: string[];
+  artist_ids?: string[]; // Artist IDs for navigation
   album?: string;
   duration_ticks?: number;
   stream_url: string;
@@ -44,6 +45,7 @@ export const convertBackendQueueItem = (backendItem: QueueItem) => ({
     ? Math.floor(backendItem.duration_ticks / 10_000_000)
     : 0,
   albumArt: undefined, // We'll need to fetch this separately
+  artistIds: backendItem.artist_ids, // Pass through artist IDs for navigation
 });
 
 export const convertRepeatModeToBackend = (

@@ -99,6 +99,38 @@ export function formatDuration(ticks?: number): string {
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 
+export function formatDetailedDuration(ticks?: number): string {
+  if (!ticks) return "0 seconds";
+
+  const totalSeconds = Math.floor(ticks / 10000000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  const parts = [];
+
+  if (hours > 0) {
+    parts.push(`${hours} hour${hours !== 1 ? "s" : ""}`);
+  }
+
+  if (minutes > 0) {
+    parts.push(`${minutes} minute${minutes !== 1 ? "s" : ""}`);
+  }
+
+  if (seconds > 0 || parts.length === 0) {
+    parts.push(`${seconds} second${seconds !== 1 ? "s" : ""}`);
+  }
+
+  // Join with commas and "and" for the last item
+  if (parts.length === 1) {
+    return parts[0];
+  } else if (parts.length === 2) {
+    return parts.join(" and ");
+  } else {
+    return parts.slice(0, -1).join(", ") + ", and " + parts[parts.length - 1];
+  }
+}
+
 export function getArtistName(item: MusicItem): string {
   // Prioritize Artists array first (contains all collaborating artists for songs)
   if (item.Artists && item.Artists.length > 0) {

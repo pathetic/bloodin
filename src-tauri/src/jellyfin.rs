@@ -466,6 +466,32 @@ impl JellyfinClient {
         Ok(response.json().await?)
     }
 
+    // Get songs from a specific playlist
+    pub async fn get_playlist_songs(&self, playlist_id: &str, limit: Option<i32>, start_index: Option<i32>) -> Result<ItemsResponse, Box<dyn std::error::Error>> {
+        let config = self.config.as_ref().ok_or("Not authenticated")?;
+        let mut url = format!(
+            "{}/Playlists/{}/Items?IncludeItemTypes=Audio&Recursive=true&Fields=BasicSyncInfo,CanDelete,PrimaryImageAspectRatio,ProductionYear",
+            config.server_url.trim_end_matches('/'),
+            playlist_id
+        );
+
+        if let Some(limit) = limit {
+            url.push_str(&format!("&Limit={}", limit));
+        }
+        if let Some(start_index) = start_index {
+            url.push_str(&format!("&StartIndex={}", start_index));
+        }
+
+        let auth_header = self.get_auth_header()?;
+        let response = self.client.get(&url).header("Authorization", auth_header).send().await?;
+
+        if !response.status().is_success() {
+            return Err(format!("Failed to get playlist songs: {}", response.status()).into());
+        }
+
+        Ok(response.json().await?)
+    }
+
     // Get a single item by ID
     pub async fn get_item(&self, item_id: &str) -> Result<MusicItem, Box<dyn std::error::Error>> {
         self.get_item_details(item_id).await

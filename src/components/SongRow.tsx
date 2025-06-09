@@ -12,6 +12,45 @@ interface SongRowProps {
   onArtistClick?: (artistId: string, artistName: string) => void;
 }
 
+// Helper component to render multiple clickable artists
+const ClickableArtists: React.FC<{
+  artistString: string;
+  artistIds?: string[];
+  onArtistClick?: (artistId: string, artistName: string) => void;
+  className?: string;
+}> = ({ artistString, artistIds, onArtistClick, className = "" }) => {
+  if (!onArtistClick || !artistIds || artistIds.length === 0) {
+    return <span className={className}>{artistString}</span>;
+  }
+
+  // Split artist string by " & " to get individual artist names
+  const artistNames = artistString.split(" & ");
+
+  // If we have mismatched counts, fall back to non-clickable display
+  if (artistNames.length !== artistIds.length) {
+    return <span className={className}>{artistString}</span>;
+  }
+
+  return (
+    <span className={className}>
+      {artistNames.map((artistName, index) => (
+        <React.Fragment key={artistIds[index]}>
+          <span
+            className="hover:text-red-400 cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              onArtistClick(artistIds[index], artistName.trim());
+            }}
+          >
+            {artistName.trim()}
+          </span>
+          {index < artistNames.length - 1 && " & "}
+        </React.Fragment>
+      ))}
+    </span>
+  );
+};
+
 export default function SongRow({
   song,
   index,
@@ -26,17 +65,6 @@ export default function SongRow({
       await audioPlayer.playSong(song.id);
     } catch (error) {
       console.error("Failed to play song:", error);
-    }
-  };
-
-  const handleArtistClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent song play
-    // Note: Song type doesn't have artistId, this would need to be updated
-    // when Song type is extended to include artist ID
-    if (onArtistClick) {
-      console.log(
-        "Artist click not implemented for Song type - missing artistId"
-      );
     }
   };
 
@@ -96,14 +124,11 @@ export default function SongRow({
             {song.title}
           </h4>
           <p className="text-sm text-gray-400 truncate">
-            <span
-              className={
-                onArtistClick ? "hover:text-red-400 cursor-pointer" : ""
-              }
-              onClick={onArtistClick ? handleArtistClick : undefined}
-            >
-              {song.artist}
-            </span>
+            <ClickableArtists
+              artistString={song.artist}
+              artistIds={song.artistIds}
+              onArtistClick={onArtistClick}
+            />
             {song.album && ` • ${song.album}`}
           </p>
         </div>
@@ -146,29 +171,23 @@ export default function SongRow({
         </div>
         <div className="min-w-0">
           <h4 className="font-medium text-white truncate">{song.title}</h4>
-          <p
-            className={`text-sm truncate ${
-              onArtistClick
-                ? "text-gray-300 hover:text-red-400 cursor-pointer"
-                : "text-gray-400"
-            }`}
-            onClick={onArtistClick ? handleArtistClick : undefined}
-          >
-            {song.artist}
+          <p className="text-sm text-gray-400 truncate">
+            <ClickableArtists
+              artistString={song.artist}
+              artistIds={song.artistIds}
+              onArtistClick={onArtistClick}
+            />
           </p>
         </div>
       </div>
 
       <div className="col-span-3 flex items-center">
-        <span
-          className={`truncate ${
-            onArtistClick
-              ? "text-gray-200 hover:text-red-400 cursor-pointer"
-              : "text-gray-300"
-          }`}
-          onClick={onArtistClick ? handleArtistClick : undefined}
-        >
-          {song.artist}
+        <span className="text-gray-300 truncate">
+          <ClickableArtists
+            artistString={song.artist}
+            artistIds={song.artistIds}
+            onArtistClick={onArtistClick}
+          />
         </span>
       </div>
 

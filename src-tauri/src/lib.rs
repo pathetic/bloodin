@@ -33,6 +33,7 @@ pub fn run() {
             commands::get_playlists,
             commands::get_album_songs,
             commands::get_artist_songs,
+            commands::get_playlist_songs,
             commands::get_item,
             commands::search_music,
             commands::get_image_url,

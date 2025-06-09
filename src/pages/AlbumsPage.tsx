@@ -1,20 +1,14 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import { IconSearch, IconMusic } from "@tabler/icons-react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { IconDisc, IconSearch } from "@tabler/icons-react";
 import { JellyfinApiService } from "../services/jellyfinApi";
 import { cacheService } from "../services/cacheService";
 import type { MusicItem } from "../types/jellyfin";
 import AlbumCard from "../components/AlbumCard";
 import { SkeletonGrid } from "../components/LoadingSkeleton";
 
-interface AlbumsPageProps {
-  onAlbumClick?: (album: any) => void;
-  onArtistClick?: (artistId: string, artistName: string) => void;
-}
-
-export default function AlbumsPage({
-  onAlbumClick,
-  onArtistClick,
-}: AlbumsPageProps) {
+export default function AlbumsPage() {
+  const navigate = useNavigate();
   const [albums, setAlbums] = useState<MusicItem[]>([]);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -25,9 +19,19 @@ export default function AlbumsPage({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const fetchTimeoutRef = useRef<number>();
   const albumsCountRef = useRef<number>(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const BATCH_SIZE = 24;
   const SCROLL_DEBOUNCE_MS = 200;
+
+  const handleAlbumClick = (album: MusicItem) => {
+    navigate(`/album/${album.Id}`);
+  };
+
+  const handleArtistClick = (artistId: string, artistName: string) => {
+    navigate(`/artist/${artistId}`);
+  };
 
   // Load total count first
   const loadTotalCount = useCallback(async () => {
@@ -199,7 +203,7 @@ export default function AlbumsPage({
             /* Empty State */
             <div className="flex-1 flex items-center justify-center min-w-full min-h-full">
               <div className="text-center py-12">
-                <IconMusic size={64} className="mx-auto text-gray-600 mb-4" />
+                <IconDisc size={64} className="mx-auto text-gray-600 mb-4" />
                 <h3 className="text-xl font-semibold text-gray-400 mb-2">
                   {isSearchMode ? "No albums found" : "No albums in library"}
                 </h3>
@@ -222,8 +226,8 @@ export default function AlbumsPage({
                     <AlbumCard
                       key={album.Id}
                       album={album}
-                      onClick={onAlbumClick}
-                      onArtistClick={onArtistClick}
+                      onClick={handleAlbumClick}
+                      onArtistClick={handleArtistClick}
                     />
                   ))}
                 </div>

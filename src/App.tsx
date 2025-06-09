@@ -1,23 +1,22 @@
-import { useState } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
-import MainContent from "./components/MainContent";
+import HomePage from "./pages/HomePage";
+import SongsPage from "./pages/SongsPage";
+import AlbumsPage from "./pages/AlbumsPage";
+import SearchPage from "./pages/SearchPage";
+import SettingsPage from "./pages/SettingsPage";
+import DetailView from "./components/DetailView";
 import Layout from "./components/Layout";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { AudioPlayerProvider } from "./contexts/AudioPlayerContext";
-import { NavigationPage } from "./types";
-
-// All page components are now handled in MainContent
 
 function AppContent() {
   const { isAuthenticated, isLoading } = useAuth();
-  const [currentPage, setCurrentPage] = useState<NavigationPage>("home");
-
-  const handlePageChange = (page: NavigationPage) => {
-    setCurrentPage(page);
-  };
-
-  // No longer needed - MainContent handles all pages
 
   // Show loading spinner while checking authentication
   if (isLoading) {
@@ -41,8 +40,26 @@ function AppContent() {
 
   return (
     <AudioPlayerProvider>
-      <Layout currentPage={currentPage} onPageChange={handlePageChange}>
-        <MainContent currentPage={currentPage} />
+      <Layout>
+        <Routes>
+          <Route path="/" element={<Navigate to="/home" replace />} />
+          <Route path="/home" element={<HomePage />} />
+          <Route path="/songs" element={<SongsPage />} />
+          <Route path="/albums" element={<AlbumsPage />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+
+          {/* Detail view routes */}
+          <Route path="/album/:id" element={<DetailView type="album" />} />
+          <Route path="/artist/:id" element={<DetailView type="artist" />} />
+          <Route
+            path="/playlist/:id"
+            element={<DetailView type="playlist" />}
+          />
+
+          {/* Catch all route */}
+          <Route path="*" element={<Navigate to="/home" replace />} />
+        </Routes>
       </Layout>
     </AudioPlayerProvider>
   );

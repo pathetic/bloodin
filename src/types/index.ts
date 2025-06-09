@@ -9,6 +9,7 @@ export interface Song {
   track?: number;
   year?: number;
   genre?: string;
+  artistIds?: string[]; // Artist IDs for navigation
 }
 
 export interface Album {
@@ -75,3 +76,12 @@ export type NavigationPage =
   | "playlists"
   | "search"
   | "settings";
+
+// Re-export queue types
+export type {
+  QueueSourceType,
+  QueueSource,
+  QueueState,
+  QueueItem,
+} from "./queue";
+export { createEmptyQueue, shuffleArray } from "./queue";

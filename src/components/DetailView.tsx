@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   IconPlayerPlay,
   IconArrowsShuffle,
@@ -11,39 +12,184 @@ import {
 import { JellyfinApiService } from "../services/jellyfinApi";
 import { useAudioPlayer } from "../contexts/AudioPlayerContext";
 import ImagePlaceholder from "./ImagePlaceholder";
-import { SkeletonGrid } from "./LoadingSkeleton";
+import SongsTable from "./SongsTable";
 import type { MusicItem } from "../types/jellyfin";
-import { formatDuration } from "../types/jellyfin";
+import { formatDetailedDuration, getArtistName } from "../types/jellyfin";
 import ArtistLinks from "./ArtistLinks";
 
 interface DetailViewProps {
   type: "album" | "artist" | "playlist";
-  id: string;
-  name: string;
-  onBack: () => void;
-  onArtistClick: (artistId: string, artistName: string) => void;
 }
 
-export default function DetailView({
-  type,
-  id,
-  name,
-  onBack,
-  onArtistClick,
-}: DetailViewProps) {
+// Helper function to convert MusicItem to Song
+const convertMusicItemToSong = (item: MusicItem): any => ({
+  id: item.Id,
+  title: item.Name || "Unknown Title",
+  artist: getArtistName(item),
+  album: item.Album || "Unknown Album",
+  duration: item.RunTimeTicks ? Math.floor(item.RunTimeTicks / 10000000) : 0,
+  track: item.IndexNumber,
+  year: item.ProductionYear,
+  artistIds: item.ArtistItems?.map((a) => a.Id) || [],
+});
+
+// Helper function to fetch ALL songs for a playlist by using pagination
+const fetchAllPlaylistSongs = async (
+  playlistId: string
+): Promise<MusicItem[]> => {
+  const allSongs: MusicItem[] = [];
+  const batchSize = 1000; // Use a reasonable batch size
+  let startIndex = 0;
+  let hasMore = true;
+
+  while (hasMore) {
+    try {
+      const response = await JellyfinApiService.getPlaylistSongs(
+        playlistId,
+        batchSize,
+        startIndex
+      );
+
+      if (response.success && response.items && response.items.length > 0) {
+        allSongs.push(...response.items);
+        startIndex += response.items.length;
+
+        // Check if we got fewer items than requested, indicating end
+        hasMore = response.items.length === batchSize;
+      } else {
+        hasMore = false;
+      }
+    } catch (error) {
+      console.error(
+        `Error fetching playlist songs batch starting at ${startIndex}:`,
+        error
+      );
+      hasMore = false;
+    }
+  }
+
+  return allSongs;
+};
+
+export default function DetailView({ type }: DetailViewProps) {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [songs, setSongs] = useState<MusicItem[]>([]);
   const [details, setDetails] = useState<MusicItem | null>(null);
   const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
   const [imageError, setImageError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [isShuffled, setIsShuffled] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [totalSongs, setTotalSongs] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [isPlayingAll, setIsPlayingAll] = useState(false);
+  const [isShuffling, setIsShuffling] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const audioPlayer = useAudioPlayer();
 
+  // Add state to track all songs for queue creation
+  const [allSongsForQueue, setAllSongsForQueue] = useState<MusicItem[]>([]);
+
+  const BATCH_SIZE = 100;
+
+  const handleArtistClick = (artistId: string, artistName: string) => {
+    navigate(`/artist/${artistId}`);
+  };
+
+  const handleBack = () => {
+    navigate("/home"); // Go back to previous page
+  };
+
+  // Load initial batch for playlists
+  const loadInitialPlaylistSongs = useCallback(async () => {
+    if (!id) return;
+
+    setIsLoading(true);
+    try {
+      const response = await JellyfinApiService.getPlaylistSongs(
+        id,
+        BATCH_SIZE,
+        0
+      );
+      if (response.success) {
+        setSongs(response.items || []);
+        setTotalSongs(response.total_count || 0);
+        setHasMore((response.items?.length || 0) < (response.total_count || 0));
+      }
+    } catch (error) {
+      console.error("Error loading initial playlist songs:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [id]);
+
+  // Load more playlist songs
+  const loadMorePlaylistSongs = useCallback(async () => {
+    if (!id || isLoadingMore || !hasMore) return;
+
+    setIsLoadingMore(true);
+    try {
+      const response = await JellyfinApiService.getPlaylistSongs(
+        id,
+        BATCH_SIZE,
+        songs.length
+      );
+      if (response.success && response.items) {
+        setSongs((prev) => [...prev, ...response.items!]);
+        setHasMore(songs.length + response.items.length < totalSongs);
+      }
+    } catch (error) {
+      console.error("Error loading more playlist songs:", error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [id, isLoadingMore, hasMore, songs.length, totalSongs]);
+
+  // Handle scroll for playlists
+  const handleScroll = useCallback(() => {
+    if (type !== "playlist") return;
+
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    const threshold = 200; // Load more when 200px from bottom
+
+    if (scrollHeight - scrollTop - clientHeight < threshold) {
+      loadMorePlaylistSongs();
+    }
+  }, [type, loadMorePlaylistSongs]);
+
   useEffect(() => {
+    if (!id) return;
+
+    // Clear previous data immediately when switching
+    setSongs([]);
+    setDetails(null);
+    setImageUrl(undefined);
+    setImageError(false);
+    setIsLoadingMore(false);
+    setTotalSongs(0);
+    setHasMore(true);
+    setAllSongsForQueue([]); // Clear queue context
+
     loadData();
   }, [id, type]);
 
+  // Set up scroll listener for playlists
+  useEffect(() => {
+    if (type !== "playlist") return;
+
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    container.addEventListener("scroll", handleScroll, { passive: true });
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [type, handleScroll]);
+
   const loadData = async () => {
+    if (!id) return;
+
     setIsLoading(true);
     try {
       let songsResult;
@@ -61,15 +207,30 @@ export default function DetailView({
           detailsResult = await JellyfinApiService.getItem(id);
           break;
         case "playlist":
-          // Get playlist songs (to be implemented when playlists are ready)
-          songsResult = { success: false, items: [] };
-          break;
+          // For playlists, get details and use pagination for songs
+          detailsResult = await JellyfinApiService.getItem(id);
+
+          // Set playlist details immediately
+          if (detailsResult?.success && detailsResult.item) {
+            setDetails(detailsResult.item);
+          }
+
+          // Load all songs for queue context
+          const allPlaylistSongs = await fetchAllPlaylistSongs(id);
+          setAllSongsForQueue(allPlaylistSongs);
+
+          // Songs will be loaded by loadInitialPlaylistSongs
+          loadInitialPlaylistSongs();
+          return; // Early return to avoid setting songs twice
         default:
           songsResult = { success: false, items: [] };
       }
 
-      if (songsResult.success && songsResult.items) {
+      if (songsResult && songsResult.success && songsResult.items) {
         setSongs(songsResult.items);
+        setTotalSongs(songsResult.items.length);
+        // For albums and artists, the displayed songs are the same as all songs
+        setAllSongsForQueue(songsResult.items);
       }
 
       if (detailsResult?.success && detailsResult.item) {
@@ -91,31 +252,114 @@ export default function DetailView({
   };
 
   const handlePlayAll = async () => {
-    if (songs.length > 0) {
-      try {
-        // For now, just play the first song
-        // TODO: Implement queue functionality
-        await audioPlayer.playSong(songs[0].Id);
-        console.log(`🎵 Playing all ${type} songs (${songs.length} tracks)`);
-      } catch (error) {
-        console.error("Failed to play:", error);
+    if (!id) return;
+
+    try {
+      setIsPlayingAll(true);
+
+      // Fetch ALL songs for this source to create complete queue
+      let allSongs: MusicItem[] = [];
+
+      switch (type) {
+        case "album":
+          const albumResult = await JellyfinApiService.getAlbumSongs(id);
+          allSongs = albumResult?.success ? albumResult.items || [] : [];
+          break;
+        case "artist":
+          const artistResult = await JellyfinApiService.getArtistSongs(id);
+          allSongs = artistResult?.success ? artistResult.items || [] : [];
+          break;
+        case "playlist":
+          // Use the helper to fetch all playlist songs
+          allSongs = await fetchAllPlaylistSongs(id);
+          break;
+        default:
+          return;
       }
+
+      if (allSongs.length > 0) {
+        // Create queue from complete song list
+        const source = {
+          type: type as "album" | "artist" | "playlist",
+          id: id,
+          name: details?.Name,
+        };
+
+        const convertedSongs = allSongs.map(convertMusicItemToSong);
+        await audioPlayer.createQueueFromSource(
+          convertedSongs,
+          source,
+          false,
+          0
+        );
+        console.log(
+          `🎵 Playing all ${type} songs (${convertedSongs.length} total tracks)`
+        );
+      } else {
+        console.warn(`No songs found for ${type}: ${id}`);
+      }
+    } catch (error) {
+      console.error("Failed to play:", error);
+    } finally {
+      setIsPlayingAll(false);
     }
   };
 
-  const handleShuffle = () => {
-    setIsShuffled(!isShuffled);
-    console.log(
-      `🔀 Shuffle ${!isShuffled ? "enabled" : "disabled"} for ${type}`
-    );
-    // TODO: Implement shuffle functionality with queue
-  };
+  const handleShuffle = async () => {
+    if (!id) return;
 
-  const handleSongClick = async (song: MusicItem) => {
     try {
-      await audioPlayer.playSong(song.Id);
+      setIsShuffling(true);
+
+      // Fetch ALL songs for this source to create complete shuffled queue
+      let allSongs: MusicItem[] = [];
+
+      switch (type) {
+        case "album":
+          const albumResult = await JellyfinApiService.getAlbumSongs(id);
+          allSongs = albumResult?.success ? albumResult.items || [] : [];
+          break;
+        case "artist":
+          const artistResult = await JellyfinApiService.getArtistSongs(id);
+          allSongs = artistResult?.success ? artistResult.items || [] : [];
+          break;
+        case "playlist":
+          // Use the helper to fetch all playlist songs
+          allSongs = await fetchAllPlaylistSongs(id);
+          break;
+        default:
+          return;
+      }
+
+      if (allSongs.length > 0) {
+        // Create shuffled queue from complete song list
+        const source = {
+          type: type as "album" | "artist" | "playlist",
+          id: id,
+          name: details?.Name,
+        };
+
+        const convertedSongs = allSongs.map(convertMusicItemToSong);
+        // Start at a random position when shuffling for true randomness
+        const randomStartIndex = Math.floor(
+          Math.random() * convertedSongs.length
+        );
+        await audioPlayer.createQueueFromSource(
+          convertedSongs,
+          source,
+          true,
+          randomStartIndex
+        );
+        console.log(
+          `🔀 Shuffle enabled and playing ${type} (${convertedSongs.length} total tracks, starting at random position ${randomStartIndex})`
+        );
+      } else {
+        console.warn(`No songs found for ${type}: ${id}`);
+      }
     } catch (error) {
-      console.error("Failed to play song:", error);
+      console.error("Failed to play with shuffle:", error);
+    } finally {
+      setIsShuffling(false);
     }
   };
 
@@ -136,16 +380,18 @@ export default function DetailView({
     (total, song) => total + (song.RunTimeTicks || 0),
     0
   );
-  const totalDurationFormatted = formatDuration(totalDuration);
+  const totalDurationFormatted = formatDetailedDuration(totalDuration);
+
+  const isPlaylist = type === "playlist";
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="p-6 bg-black/15 backdrop-blur-md border-b border-white/10">
+      <div className="flex-shrink-0 p-6 bg-black/15 backdrop-blur-md border-b border-white/10">
         <div className="flex items-center space-x-4 mb-6">
           <button
-            onClick={onBack}
-            className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
+            onClick={handleBack}
+            className="cursor-pointer p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
           >
             <IconArrowLeft size={20} />
           </button>
@@ -158,7 +404,7 @@ export default function DetailView({
             {type === "album" && imageUrl && !imageError ? (
               <img
                 src={imageUrl}
-                alt={name}
+                alt={details?.Name || ""}
                 className="w-full h-full object-cover rounded-xl shadow-lg"
                 onError={() => setImageError(true)}
               />
@@ -172,7 +418,9 @@ export default function DetailView({
           {/* Details */}
           <div className="flex-1 space-y-4">
             <div>
-              <h2 className="text-4xl font-bold text-white mb-2">{name}</h2>
+              <h2 className="text-4xl font-bold text-white mb-2">
+                {details?.Name}
+              </h2>
               {details && (
                 <div className="text-gray-400 space-y-1">
                   {type === "album" && (
@@ -180,15 +428,25 @@ export default function DetailView({
                       <span>by</span>
                       <ArtistLinks
                         item={details}
-                        onArtistClick={onArtistClick}
+                        onArtistClick={handleArtistClick}
                         className="text-gray-300"
                       />
                     </div>
                   )}
                   {details.ProductionYear && <p>{details.ProductionYear}</p>}
                   <p>
-                    {songs.length} song{songs.length !== 1 ? "s" : ""} •{" "}
-                    {totalDurationFormatted}
+                    {isPlaylist ? (
+                      <>
+                        {songs.length} of {totalSongs} song
+                        {totalSongs !== 1 ? "s" : ""} loaded •{" "}
+                        {totalDurationFormatted}
+                      </>
+                    ) : (
+                      <>
+                        {songs.length} song{songs.length !== 1 ? "s" : ""} •{" "}
+                        {totalDurationFormatted}
+                      </>
+                    )}
                   </p>
                 </div>
               )}
@@ -198,24 +456,20 @@ export default function DetailView({
             <div className="flex items-center space-x-4">
               <button
                 onClick={handlePlayAll}
-                disabled={songs.length === 0}
-                className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                disabled={songs.length === 0 || isPlayingAll}
+                className="cursor-pointer flex items-center space-x-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-medium transition-colors"
               >
                 <IconPlayerPlay size={20} />
-                <span>Play All</span>
+                <span>{isPlayingAll ? "Loading..." : "Play All"}</span>
               </button>
 
               <button
                 onClick={handleShuffle}
-                disabled={songs.length === 0}
-                className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-colors ${
-                  isShuffled
-                    ? "bg-orange-600 hover:bg-orange-700 text-white"
-                    : "bg-white/10 hover:bg-white/20 text-white"
-                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                disabled={songs.length === 0 || isShuffling}
+                className="cursor-pointer flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-colors bg-white/10 hover:bg-white/20 text-white disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <IconArrowsShuffle size={20} />
-                <span>Shuffle</span>
+                <span>{isShuffling ? "Loading..." : "Shuffle"}</span>
               </button>
             </div>
           </div>
@@ -223,13 +477,18 @@ export default function DetailView({
       </div>
 
       {/* Songs List */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 min-h-0 overflow-hidden">
         {isLoading ? (
-          <div className="p-6">
-            <SkeletonGrid count={8} type="table" />
-          </div>
+          <SongsTable
+            songs={[]}
+            isLoading={true}
+            loadingRows={8}
+            onArtistClick={handleArtistClick}
+            showAlbumColumn={false}
+            showArtistInTitle={type !== "artist"}
+          />
         ) : songs.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center">
+          <div className="h-full flex items-center justify-center px-6">
             <div className="text-center py-12">
               <IconMusic size={64} className="mx-auto text-gray-600 mb-4" />
               <h3 className="text-xl font-semibold text-gray-400 mb-2">
@@ -241,78 +500,38 @@ export default function DetailView({
             </div>
           </div>
         ) : (
-          <div className="bg-white/5 backdrop-blur-sm">
-            {/* Table Header */}
-            <div className="grid grid-cols-12 gap-4 p-4 border-b border-white/10 text-sm font-medium text-gray-400 uppercase tracking-wider bg-white/5 sticky top-0">
-              <div className="col-span-1">#</div>
-              <div className="col-span-6">Title</div>
-              <div className="col-span-3">Artist</div>
-              <div className="col-span-2 text-right">Duration</div>
-            </div>
+          <div ref={scrollContainerRef} className="h-full overflow-auto">
+            <SongsTable
+              songs={songs}
+              onArtistClick={handleArtistClick}
+              showAlbumColumn={false}
+              showArtistInTitle={type !== "artist"}
+              sourceContext={{
+                type: type,
+                id: id!,
+                name: details?.Name,
+              }}
+              allSongs={allSongsForQueue}
+            />
 
-            {/* Songs */}
-            <div>
-              {songs.map((song, index) => {
-                const isCurrentSong =
-                  audioPlayer.state.currentSong?.id === song.Id;
-                return (
-                  <div
-                    key={song.Id}
-                    onClick={() => handleSongClick(song)}
-                    className={`grid grid-cols-12 gap-4 p-4 transition-colors cursor-pointer group border-b border-white/5 ${
-                      isCurrentSong
-                        ? "bg-red-500/10 hover:bg-red-500/15 border-l-4 border-red-500"
-                        : "hover:bg-white/5"
-                    }`}
-                  >
-                    <div className="col-span-1 flex items-center">
-                      <span
-                        className={`text-sm ${
-                          isCurrentSong
-                            ? "text-red-400 font-bold"
-                            : "text-gray-400"
-                        }`}
-                      >
-                        {index + 1}
-                      </span>
-                    </div>
+            {/* Loading more indicator - only for playlists */}
+            {isPlaylist && isLoadingMore && (
+              <div className="p-6 text-center">
+                <div className="flex items-center justify-center space-x-2 text-gray-400">
+                  <div className="w-4 h-4 border-2 border-gray-600 border-t-white rounded-full animate-spin"></div>
+                  <span className="text-sm">Loading more songs...</span>
+                </div>
+              </div>
+            )}
 
-                    <div className="col-span-6 flex items-center min-w-0">
-                      <div className="min-w-0">
-                        <h4
-                          className={`font-medium truncate ${
-                            isCurrentSong ? "text-red-300" : "text-white"
-                          }`}
-                        >
-                          {song.Name}
-                        </h4>
-                        {type !== "artist" && (
-                          <ArtistLinks
-                            item={song}
-                            onArtistClick={onArtistClick}
-                            className="text-sm text-gray-400 truncate"
-                          />
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="col-span-3 flex items-center">
-                      <ArtistLinks
-                        item={song}
-                        onArtistClick={onArtistClick}
-                        className="text-gray-300 truncate"
-                      />
-                    </div>
-
-                    <div className="col-span-2 flex items-center justify-end">
-                      <span className="text-gray-400 text-sm">
-                        {formatDuration(song.RunTimeTicks)}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            {/* End indicator - only for playlists */}
+            {isPlaylist && !hasMore && songs.length > 0 && (
+              <div className="p-6 text-center">
+                <p className="text-sm text-gray-500">
+                  All {totalSongs} songs loaded
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>

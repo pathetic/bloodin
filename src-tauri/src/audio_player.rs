@@ -35,6 +35,7 @@ pub struct QueueItem {
     pub id: String,
     pub name: String,
     pub artists: Vec<String>,
+    pub artist_ids: Option<Vec<String>>, // Artist IDs for navigation
     pub album: Option<String>,
     pub duration_ticks: Option<i64>,
     pub stream_url: String,

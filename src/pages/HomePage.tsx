@@ -1,29 +1,21 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useAudioPlayer } from "../contexts/AudioPlayerContext";
 import { JellyfinApiService } from "../services/jellyfinApi";
 import { cacheService } from "../services/cacheService";
 import { IconMusic, IconRefresh, IconDisc } from "@tabler/icons-react";
 import type { MusicItem } from "../types/jellyfin";
-import type { NavigationPage } from "../types";
+
 import SongCard from "../components/SongCard";
 import AlbumCard from "../components/AlbumCard";
 import SongRow from "../components/SongRow";
 import { SkeletonGrid } from "../components/LoadingSkeleton";
+import { useNavigate } from "react-router-dom";
 
-interface HomePageProps {
-  onPageChange?: (page: NavigationPage) => void;
-  onAlbumClick?: (album: any) => void;
-  onArtistClick?: (artistId: string, artistName: string) => void;
-}
-
-export default function HomePage({
-  onPageChange,
-  onAlbumClick,
-  onArtistClick,
-}: HomePageProps = {}) {
+export default function HomePage() {
   const { userName } = useAuth();
   const audioPlayer = useAudioPlayer();
+  const navigate = useNavigate();
   const [recentSongs, setRecentSongs] = useState<MusicItem[]>([]);
   const [recentAlbums, setRecentAlbums] = useState<MusicItem[]>([]);
   const [totalSongs, setTotalSongs] = useState<number>(0);
@@ -154,6 +146,14 @@ export default function HomePage({
     }
   };
 
+  const handleAlbumClick = (album: MusicItem) => {
+    navigate(`/album/${album.Id}`);
+  };
+
+  const handleArtistClick = (artistId: string, artistName: string) => {
+    navigate(`/artist/${artistId}`);
+  };
+
   if (error) {
     return (
       <div className="p-6">
@@ -253,7 +253,7 @@ export default function HomePage({
                   <SongCard
                     key={song.Id}
                     song={song}
-                    onArtistClick={onArtistClick}
+                    onArtistClick={handleArtistClick}
                   />
                 ))}
               </div>
@@ -273,7 +273,7 @@ export default function HomePage({
                     song={song}
                     index={index + 1}
                     compact={true}
-                    onArtistClick={onArtistClick}
+                    onArtistClick={handleArtistClick}
                   />
                 ))}
               </div>
@@ -295,8 +295,8 @@ export default function HomePage({
                   <AlbumCard
                     key={album.Id}
                     album={album}
-                    onClick={onAlbumClick}
-                    onArtistClick={onArtistClick}
+                    onClick={handleAlbumClick}
+                    onArtistClick={handleArtistClick}
                   />
                 ))}
               </div>

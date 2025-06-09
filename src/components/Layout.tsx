@@ -1,23 +1,18 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
-import PlayerBar from "./PlayerBar";
+import { PlayerBar } from "./PlayerBar";
 import FullscreenPlayer from "./FullscreenPlayer";
-import { NavigationPage } from "../types";
 import { useAudioPlayer } from "../contexts/AudioPlayerContext";
 import { IconMusic, IconMinimize } from "@tabler/icons-react";
 // import { IconSearch, IconMoon, IconBell } from "@tabler/icons-react";
 
 interface LayoutProps {
   children: React.ReactNode;
-  currentPage: NavigationPage;
-  onPageChange: (page: NavigationPage) => void;
 }
 
-const Layout: React.FC<LayoutProps> = ({
-  children,
-  currentPage,
-  onPageChange,
-}) => {
+const Layout: React.FC<LayoutProps> = ({ children }) => {
+  const navigate = useNavigate();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isImageExpanded, setIsImageExpanded] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -39,6 +34,22 @@ const Layout: React.FC<LayoutProps> = ({
   });
   const audioPlayer = useAudioPlayer();
 
+  const handleArtistClick = (artistId: string, artistName: string) => {
+    navigate(`/artist/${artistId}`);
+  };
+
+  const handleSourceNavigate = () => {
+    const queueStats = audioPlayer.getQueueStats();
+    if (queueStats.source.type !== "none") {
+      const sourceType = queueStats.source.type;
+      const sourceId = queueStats.source.id;
+      navigate(`/${sourceType}/${sourceId}`);
+      console.log(
+        `🎵 Navigating to ${sourceType}: ${queueStats.source.name || sourceId}`
+      );
+    }
+  };
+
   const handleFullscreen = () => {
     setIsFullscreen(true);
   };
@@ -48,8 +59,8 @@ const Layout: React.FC<LayoutProps> = ({
   };
 
   const getCornerPosition = (corner: string) => {
-    const margin = "8"; // 32px margin - better padding from edges
-    const bottomMargin = "20"; // 80px from bottom - closer to PlayerBar but not overlapping
+    const margin = "4"; // 32px margin - better padding from edges
+    const bottomMargin = "4"; // 80px from bottom - closer to PlayerBar but not overlapping
 
     let position;
     switch (corner) {
@@ -69,7 +80,6 @@ const Layout: React.FC<LayoutProps> = ({
         position = `bottom-4 left-4`;
     }
 
-    console.log(`🎯 Generated CSS classes for ${corner}:`, position);
     return position;
   };
 
@@ -158,8 +168,6 @@ const Layout: React.FC<LayoutProps> = ({
       newCorner = "bottom-right";
     }
 
-    console.log(`🎯 Detected corner: ${newCorner}`);
-
     // Save the new position
     const newPosition = { corner: newCorner };
     setImagePosition(newPosition);
@@ -181,6 +189,36 @@ const Layout: React.FC<LayoutProps> = ({
     document.removeEventListener("mousemove", handleMouseMove);
     document.removeEventListener("mouseup", handleMouseUp);
   };
+
+  // Spacebar play/pause functionality
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Check if spacebar was pressed
+      if (e.code === "Space" || e.key === " ") {
+        // Don't trigger if user is typing in an input, textarea, or contenteditable element
+        const target = e.target as HTMLElement;
+        const isInputElement =
+          target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable ||
+          target.hasAttribute("contenteditable");
+
+        if (!isInputElement) {
+          e.preventDefault(); // Prevent page scroll
+          audioPlayer.playPause();
+          console.log("🎵 Spacebar triggered play/pause");
+        }
+      }
+    };
+
+    // Add the event listener
+    document.addEventListener("keydown", handleKeyDown);
+
+    // Cleanup function
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [audioPlayer]);
 
   // Cleanup event listeners on unmount
   useEffect(() => {
@@ -230,8 +268,6 @@ const Layout: React.FC<LayoutProps> = ({
           <div className="flex-1 flex relative z-10 min-h-0">
             {/* Sidebar */}
             <Sidebar
-              currentPage={currentPage}
-              onPageChange={onPageChange}
               isCollapsed={isCollapsed}
               onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
               isImageExpanded={isImageExpanded && !isCollapsed}
@@ -327,6 +363,8 @@ const Layout: React.FC<LayoutProps> = ({
               onStartSeeking={audioPlayer.startSeeking}
               onStopSeeking={audioPlayer.stopSeeking}
               onFullscreen={handleFullscreen}
+              onArtistClick={handleArtistClick}
+              onSourceNavigate={handleSourceNavigate}
             />
           </div>
         </div>

@@ -349,6 +349,30 @@ export class JellyfinApiService {
   }
 
   /**
+   * Get songs from a specific playlist
+   */
+  static async getPlaylistSongs(
+    playlistId: string,
+    limit?: number,
+    startIndex?: number
+  ): Promise<MusicLibraryResult> {
+    try {
+      const result = await invoke<MusicLibraryResult>("get_playlist_songs", {
+        playlistId,
+        limit,
+        startIndex,
+      });
+      return result;
+    } catch (error) {
+      console.error("Failed to get playlist songs:", error);
+      return {
+        success: false,
+        message: `Failed to get playlist songs: ${error}`,
+      };
+    }
+  }
+
+  /**
    * Get details for a specific item (album, artist, etc.)
    */
   static async getItem(
