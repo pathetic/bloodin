@@ -62,6 +62,13 @@ pub struct MusicLibraryResult {
     pub total_count: Option<i32>,
 }
 
+#[derive(serde::Serialize)]
+pub struct ItemResult {
+    pub success: bool,
+    pub message: String,
+    pub item: Option<MusicItem>,
+}
+
 #[tauri::command]
 pub async fn connect_to_jellyfin(
     server_url: String,
@@ -833,6 +840,126 @@ pub async fn get_recent_albums(
             message: format!("Failed to get recent albums: {}", e),
             items: None,
             total_count: None,
+        }),
+    }
+}
+
+#[tauri::command]
+pub async fn get_album_songs(
+    album_id: String,
+    state: State<'_, AppState>,
+) -> Result<MusicLibraryResult, String> {
+    let client_config = {
+        let client = state.jellyfin_client.lock().map_err(|e| e.to_string())?;
+        client.get_config().cloned()
+    };
+
+    let config = match client_config {
+        Some(config) => config,
+        None => {
+            return Ok(MusicLibraryResult {
+                success: false,
+                message: "Not authenticated".to_string(),
+                items: None,
+                total_count: None,
+            });
+        }
+    };
+
+    let mut client = JellyfinClient::new();
+    client.set_config(config);
+
+    match client.get_album_songs(&album_id).await {
+        Ok(response) => Ok(MusicLibraryResult {
+            success: true,
+            message: "Album songs retrieved successfully".to_string(),
+            items: Some(response.items),
+            total_count: Some(response.total_record_count),
+        }),
+        Err(e) => Ok(MusicLibraryResult {
+            success: false,
+            message: format!("Failed to get album songs: {}", e),
+            items: None,
+            total_count: None,
+        }),
+    }
+}
+
+#[tauri::command]
+pub async fn get_artist_songs(
+    artist_id: String,
+    state: State<'_, AppState>,
+) -> Result<MusicLibraryResult, String> {
+    let client_config = {
+        let client = state.jellyfin_client.lock().map_err(|e| e.to_string())?;
+        client.get_config().cloned()
+    };
+
+    let config = match client_config {
+        Some(config) => config,
+        None => {
+            return Ok(MusicLibraryResult {
+                success: false,
+                message: "Not authenticated".to_string(),
+                items: None,
+                total_count: None,
+            });
+        }
+    };
+
+    let mut client = JellyfinClient::new();
+    client.set_config(config);
+
+    match client.get_artist_songs(&artist_id).await {
+        Ok(response) => Ok(MusicLibraryResult {
+            success: true,
+            message: "Artist songs retrieved successfully".to_string(),
+            items: Some(response.items),
+            total_count: Some(response.total_record_count),
+        }),
+        Err(e) => Ok(MusicLibraryResult {
+            success: false,
+            message: format!("Failed to get artist songs: {}", e),
+            items: None,
+            total_count: None,
+        }),
+    }
+}
+
+#[tauri::command]
+pub async fn get_item(
+    item_id: String,
+    state: State<'_, AppState>,
+) -> Result<ItemResult, String> {
+    let client_config = {
+        let client = state.jellyfin_client.lock().map_err(|e| e.to_string())?;
+        client.get_config().cloned()
+    };
+
+    let config = match client_config {
+        Some(config) => config,
+        None => {
+            return Ok(ItemResult {
+                success: false,
+                message: "Not authenticated".to_string(),
+                item: None,
+            });
+        }
+    };
+
+    let mut client = JellyfinClient::new();
+    client.set_config(config);
+
+    match client.get_item(&item_id).await {
+        Ok(item) => Ok(ItemResult {
+            success: true,
+            message: "Item retrieved successfully".to_string(),
+            item: Some(item),
+        }),
+        Err(e) => Ok(ItemResult {
+            success: false,
+            message: format!("Failed to get item: {}", e),
+            item: None,
         }),
     }
 } 

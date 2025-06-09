@@ -3,25 +3,25 @@ import { useAuth } from "../contexts/AuthContext";
 import { useAudioPlayer } from "../contexts/AudioPlayerContext";
 import { JellyfinApiService } from "../services/jellyfinApi";
 import { cacheService } from "../services/cacheService";
-import {
-  IconMusic,
-  IconDisc,
-  IconMicrophone,
-  IconPlaylist,
-  IconPlayerPlay,
-  IconRefresh,
-} from "@tabler/icons-react";
+import { IconMusic, IconRefresh, IconDisc } from "@tabler/icons-react";
 import type { MusicItem } from "../types/jellyfin";
-import { formatDuration, getArtistName } from "../types/jellyfin";
-import ImagePlaceholder from "../components/ImagePlaceholder";
 import type { NavigationPage } from "../types";
-import type { Song } from "../types";
+import SongCard from "../components/SongCard";
+import AlbumCard from "../components/AlbumCard";
+import SongRow from "../components/SongRow";
+import { SkeletonGrid } from "../components/LoadingSkeleton";
 
 interface HomePageProps {
   onPageChange?: (page: NavigationPage) => void;
+  onAlbumClick?: (album: any) => void;
+  onArtistClick?: (artistId: string, artistName: string) => void;
 }
 
-export default function HomePage({ onPageChange }: HomePageProps = {}) {
+export default function HomePage({
+  onPageChange,
+  onAlbumClick,
+  onArtistClick,
+}: HomePageProps = {}) {
   const { userName } = useAuth();
   const audioPlayer = useAudioPlayer();
   const [recentSongs, setRecentSongs] = useState<MusicItem[]>([]);
@@ -183,54 +183,48 @@ export default function HomePage({ onPageChange }: HomePageProps = {}) {
   return (
     <div className="relative h-full">
       {/* Fixed Top Section - Overlay */}
-      <div className="absolute top-0 left-0 right-0 z-10 p-6 space-y-6 bg-black/15 backdrop-blur-md border-b border-white/10">
-        {/* Welcome Header */}
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold text-white">
-            Welcome back, {userName || "Music Lover"}! 🎵
-          </h1>
-          <p className="text-gray-400">Your music library is ready to play</p>
-        </div>
+      <div className="absolute top-0 left-0 right-0 z-10 p-6 bg-black/15 backdrop-blur-md border-b border-white/10">
+        {/* Welcome Header and Statistics */}
+        <div className="flex items-center justify-between">
+          {/* Welcome Text */}
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold text-white">
+              Welcome back, {userName || "Music Lover"}! 🎵
+            </h1>
+            <p className="text-gray-400">Your music library is ready to play</p>
+          </div>
 
-        {/* Quick Access Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <QuickAccessCard
-            icon={<IconMusic size={24} />}
-            title="Songs"
-            subtitle={
-              isLoading ? "Loading..." : `${totalSongs.toLocaleString()} songs`
-            }
-            color="from-red-500 to-red-700"
-            onClick={() => onPageChange?.("songs")}
-          />
-          <QuickAccessCard
-            icon={<IconDisc size={24} />}
-            title="Albums"
-            subtitle={
-              isLoading
-                ? "Loading..."
-                : `${totalAlbums.toLocaleString()} albums`
-            }
-            color="from-amber-500 to-orange-600"
-            onClick={() => onPageChange?.("albums")}
-          />
-          <QuickAccessCard
-            icon={<IconMicrophone size={24} />}
-            title="Artists"
-            subtitle="Coming soon"
-            color="from-purple-600 to-purple-800"
-          />
-          <QuickAccessCard
-            icon={<IconPlaylist size={24} />}
-            title="Playlists"
-            subtitle="Coming soon"
-            color="from-blue-600 to-blue-800"
-          />
+          {/* Statistics */}
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm rounded-lg px-4 py-3">
+              <div className="p-2 bg-red-500/30 rounded-lg">
+                <IconMusic size={20} className="text-red-500" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-400">Total Songs</p>
+                <p className="text-lg font-semibold text-white">
+                  {isLoading ? "..." : totalSongs.toLocaleString()}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm rounded-lg px-4 py-3">
+              <div className="p-2 bg-orange-500/30 rounded-lg">
+                <IconDisc size={20} className="text-orange-500" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-400">Total Albums</p>
+                <p className="text-lg font-semibold text-white">
+                  {isLoading ? "..." : totalAlbums.toLocaleString()}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Scrollable Content - Full Height */}
-      <div className="h-full overflow-auto pt-60 p-6 space-y-8 relative z-0 no-scrollbar">
+      <div className="h-full overflow-auto pt-36 p-6 space-y-8 relative z-0 no-scrollbar">
         {/* Explore Songs */}
         {recentSongs.length > 0 && (
           <div className="space-y-4">
@@ -252,24 +246,15 @@ export default function HomePage({ onPageChange }: HomePageProps = {}) {
               </button>
             </div>
             {isLoading ? (
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {[...Array(12)].map((_, i) => (
-                  <div
-                    key={`song-skeleton-${i}`}
-                    className="space-y-3 animate-pulse"
-                  >
-                    <div className="aspect-square bg-gray-600 rounded-lg"></div>
-                    <div className="space-y-2">
-                      <div className="h-4 bg-gray-600 rounded"></div>
-                      <div className="h-3 bg-gray-700 rounded w-3/4"></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <SkeletonGrid count={12} />
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                 {recentSongs.slice(0, 12).map((song) => (
-                  <SongCard key={song.Id} song={song} />
+                  <SongCard
+                    key={song.Id}
+                    song={song}
+                    onArtistClick={onArtistClick}
+                  />
                 ))}
               </div>
             )}
@@ -283,10 +268,12 @@ export default function HomePage({ onPageChange }: HomePageProps = {}) {
             <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 max-h-80 overflow-y-auto">
               <div className="space-y-2">
                 {recentlyPlayedSongs.slice(0, 20).map((song, index) => (
-                  <RecentlyPlayedSongRow
+                  <SongRow
                     key={`${song.id}-${index}`}
                     song={song}
-                    index={index}
+                    index={index + 1}
+                    compact={true}
+                    onArtistClick={onArtistClick}
                   />
                 ))}
               </div>
@@ -301,24 +288,16 @@ export default function HomePage({ onPageChange }: HomePageProps = {}) {
               Recently Added Albums
             </h2>
             {isLoading ? (
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {[...Array(6)].map((_, i) => (
-                  <div
-                    key={`album-skeleton-${i}`}
-                    className="space-y-3 animate-pulse"
-                  >
-                    <div className="aspect-square bg-gray-600 rounded-lg"></div>
-                    <div className="space-y-2">
-                      <div className="h-4 bg-gray-600 rounded"></div>
-                      <div className="h-3 bg-gray-700 rounded w-3/4"></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <SkeletonGrid count={6} />
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                 {recentAlbums.slice(0, 12).map((album) => (
-                  <AlbumCard key={album.Id} album={album} />
+                  <AlbumCard
+                    key={album.Id}
+                    album={album}
+                    onClick={onAlbumClick}
+                    onArtistClick={onArtistClick}
+                  />
                 ))}
               </div>
             )}
@@ -340,223 +319,6 @@ export default function HomePage({ onPageChange }: HomePageProps = {}) {
               </p>
             </div>
           )}
-      </div>
-    </div>
-  );
-}
-
-// Quick Access Card Component
-interface QuickAccessCardProps {
-  icon: React.ReactNode;
-  title: string;
-  subtitle: string;
-  color: string;
-  onClick?: () => void;
-}
-
-function QuickAccessCard({
-  icon,
-  title,
-  subtitle,
-  color,
-  onClick,
-}: QuickAccessCardProps) {
-  return (
-    <div
-      className={`relative bg-gradient-to-br ${color} bg-opacity-30 backdrop-blur-md rounded-xl p-4 cursor-pointer hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-2xl group overflow-hidden`}
-      onClick={onClick}
-    >
-      {/* Glassmorphism overlay */}
-      <div className="absolute inset-0 bg-white/5 backdrop-blur-sm rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-
-      {/* Gradient overlay for depth */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-black/5 rounded-xl"></div>
-
-      {/* Border highlight */}
-      <div className="absolute inset-0 rounded-xl border border-white/20 group-hover:border-white/30 transition-colors duration-300"></div>
-
-      {/* Content */}
-      <div className="relative flex items-center space-x-3 z-10">
-        <div className="text-white drop-shadow-lg">{icon}</div>
-        <div>
-          <h3 className="font-semibold text-white drop-shadow-md">{title}</h3>
-          <p className="text-white/90 text-sm drop-shadow-sm">{subtitle}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Song Card Component
-interface SongCardProps {
-  song: MusicItem;
-}
-
-function SongCard({ song }: SongCardProps) {
-  const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
-  const [imageError, setImageError] = useState(false);
-  const audioPlayer = useAudioPlayer();
-
-  useEffect(() => {
-    const loadImage = async () => {
-      const url = await JellyfinApiService.getImageUrl(song.Id, "Primary");
-      if (url) setImageUrl(url);
-    };
-    loadImage();
-  }, [song.Id]);
-
-  const handlePlaySong = async () => {
-    try {
-      await audioPlayer.playSong(song.Id);
-    } catch (error) {
-      console.error("Failed to play song:", error);
-    }
-  };
-
-  return (
-    <div className="space-y-3 cursor-pointer group" onClick={handlePlaySong}>
-      <div className="relative aspect-square">
-        {imageUrl && !imageError ? (
-          <img
-            src={imageUrl}
-            alt={song.Name}
-            className="w-full h-full object-cover rounded-lg shadow-lg group-hover:shadow-xl transition-shadow"
-            onError={() => setImageError(true)}
-          />
-        ) : (
-          <ImagePlaceholder type="song" size="large" />
-        )}
-        <div className="absolute inset-0 bg-black/40 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-          <IconPlayerPlay size={24} className="text-white" />
-        </div>
-      </div>
-      <div className="space-y-1">
-        <h4 className="font-medium text-white truncate">{song.Name}</h4>
-        <p className="text-sm text-gray-400 truncate">{getArtistName(song)}</p>
-        {song.Album && (
-          <p className="text-xs text-gray-500 truncate">{song.Album}</p>
-        )}
-        <p className="text-xs text-gray-500">
-          {formatDuration(song.RunTimeTicks)}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-// Album Card Component
-interface AlbumCardProps {
-  album: MusicItem;
-}
-
-function AlbumCard({ album }: AlbumCardProps) {
-  const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
-  const [imageError, setImageError] = useState(false);
-
-  useEffect(() => {
-    const loadImage = async () => {
-      const url = await JellyfinApiService.getImageUrl(album.Id, "Primary");
-      if (url) setImageUrl(url);
-    };
-    loadImage();
-  }, [album.Id]);
-
-  return (
-    <div className="space-y-3 cursor-pointer group">
-      <div className="relative aspect-square">
-        {imageUrl && !imageError ? (
-          <img
-            src={imageUrl}
-            alt={album.Name}
-            className="w-full h-full object-cover rounded-lg shadow-lg group-hover:shadow-xl transition-shadow"
-            onError={() => setImageError(true)}
-          />
-        ) : (
-          <ImagePlaceholder type="album" size="large" />
-        )}
-        <div className="absolute inset-0 bg-black/40 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"></div>
-      </div>
-      <div className="space-y-1">
-        <h4 className="font-medium text-white truncate">{album.Name}</h4>
-        <p className="text-sm text-gray-400 truncate">{getArtistName(album)}</p>
-        {album.ProductionYear && (
-          <p className="text-xs text-gray-500">{album.ProductionYear}</p>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// Recently Played Song Row Component
-interface RecentlyPlayedSongRowProps {
-  song: Song;
-  index: number;
-}
-
-function RecentlyPlayedSongRow({ song, index }: RecentlyPlayedSongRowProps) {
-  const audioPlayer = useAudioPlayer();
-
-  const handlePlaySong = async () => {
-    try {
-      await audioPlayer.playSong(song.id);
-    } catch (error) {
-      console.error("Failed to play song:", error);
-    }
-  };
-
-  const isCurrentSong = audioPlayer.state.currentSong?.id === song.id;
-
-  return (
-    <div
-      className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer group transition-colors ${
-        isCurrentSong ? "bg-red-500/10 hover:bg-red-500/15" : "hover:bg-white/5"
-      }`}
-      onClick={handlePlaySong}
-    >
-      <div className="w-8 text-center">
-        <span
-          className={`text-sm ${
-            isCurrentSong
-              ? "text-red-400 font-bold"
-              : "text-gray-400 group-hover:hidden"
-          }`}
-        >
-          {index + 1}
-        </span>
-        <button
-          className={`p-1 rounded-full hover:bg-red-500 transition-colors ${
-            isCurrentSong
-              ? "text-red-400"
-              : "text-white hidden group-hover:block"
-          }`}
-        >
-          <IconPlayerPlay size={14} />
-        </button>
-      </div>
-
-      <div className="w-10 h-10 flex-shrink-0">
-        {song.albumArt ? (
-          <img
-            src={song.albumArt}
-            alt={song.title}
-            className="w-10 h-10 rounded object-cover"
-          />
-        ) : (
-          <ImagePlaceholder type="song" size="small" />
-        )}
-      </div>
-
-      <div className="flex-1 min-w-0">
-        <h4
-          className={`font-medium truncate ${
-            isCurrentSong ? "text-red-300" : "text-white"
-          }`}
-        >
-          {song.title}
-        </h4>
-        <p className="text-sm text-gray-400 truncate">
-          {song.artist} {song.album && `• ${song.album}`}
-        </p>
       </div>
     </div>
   );

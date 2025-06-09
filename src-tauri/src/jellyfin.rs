@@ -163,11 +163,9 @@ impl JellyfinClient {
         let client = Client::builder()
             .user_agent("Bloodin/0.1.0")
             .timeout(std::time::Duration::from_secs(30))
-            .danger_accept_invalid_certs(true) // Accept self-signed certificates
-            .danger_accept_invalid_hostnames(true) // Accept hostname mismatches
-            .redirect(reqwest::redirect::Policy::limited(10))
+            .danger_accept_invalid_certs(true) // Accept self-signed certificates for testing
             .build()
-            .unwrap_or_else(|_| Client::new());
+            .unwrap_or_else(|_| Client::new()); // Fallback to default client
 
         Self {
             client,
@@ -426,6 +424,51 @@ impl JellyfinClient {
     pub async fn get_recent_albums(&mut self, limit: Option<i32>, start_index: Option<i32>) -> Result<ItemsResponse, Box<dyn std::error::Error>> {
         println!("📅 get_recent_albums called with limit: {:?}, start_index: {:?}", limit, start_index);
         self.get_items_with_sort("MusicAlbum", limit, start_index, "DateCreated", "Descending").await
+    }
+
+    // Get all songs from a specific album
+    pub async fn get_album_songs(&self, album_id: &str) -> Result<ItemsResponse, Box<dyn std::error::Error>> {
+        let config = self.config.as_ref().ok_or("Not authenticated")?;
+        let url = format!(
+            "{}/Users/{}/Items?ParentId={}&IncludeItemTypes=Audio&Recursive=true&SortBy=ParentIndexNumber,IndexNumber,SortName",
+            config.server_url.trim_end_matches('/'),
+            config.user_id,
+            album_id
+        );
+
+        let auth_header = self.get_auth_header()?;
+        let response = self.client.get(&url).header("Authorization", auth_header).send().await?;
+
+        if !response.status().is_success() {
+            return Err(format!("Failed to get album songs: {}", response.status()).into());
+        }
+
+        Ok(response.json().await?)
+    }
+
+    // Get all songs from a specific artist
+    pub async fn get_artist_songs(&self, artist_id: &str) -> Result<ItemsResponse, Box<dyn std::error::Error>> {
+        let config = self.config.as_ref().ok_or("Not authenticated")?;
+        let url = format!(
+            "{}/Users/{}/Items?ArtistIds={}&IncludeItemTypes=Audio&Recursive=true&SortBy=SortName",
+            config.server_url.trim_end_matches('/'),
+            config.user_id,
+            artist_id
+        );
+
+        let auth_header = self.get_auth_header()?;
+        let response = self.client.get(&url).header("Authorization", auth_header).send().await?;
+
+        if !response.status().is_success() {
+            return Err(format!("Failed to get artist songs: {}", response.status()).into());
+        }
+
+        Ok(response.json().await?)
+    }
+
+    // Get a single item by ID
+    pub async fn get_item(&self, item_id: &str) -> Result<MusicItem, Box<dyn std::error::Error>> {
+        self.get_item_details(item_id).await
     }
 
     // Get songs (bypassing cache for testing pagination)

@@ -1,18 +1,20 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import {
-  IconSearch,
-  IconMusic,
-  IconPlayerPlay,
-  IconChevronLeft,
-  IconChevronRight,
-} from "@tabler/icons-react";
+import { IconSearch, IconMusic } from "@tabler/icons-react";
 import { JellyfinApiService } from "../services/jellyfinApi";
 import { cacheService } from "../services/cacheService";
 import type { MusicItem } from "../types/jellyfin";
-import { getArtistName } from "../types/jellyfin";
-import ImagePlaceholder from "../components/ImagePlaceholder";
+import AlbumCard from "../components/AlbumCard";
+import { SkeletonGrid } from "../components/LoadingSkeleton";
 
-export default function AlbumsPage() {
+interface AlbumsPageProps {
+  onAlbumClick?: (album: any) => void;
+  onArtistClick?: (artistId: string, artistName: string) => void;
+}
+
+export default function AlbumsPage({
+  onAlbumClick,
+  onArtistClick,
+}: AlbumsPageProps) {
   const [albums, setAlbums] = useState<MusicItem[]>([]);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -191,11 +193,7 @@ export default function AlbumsPage() {
           {isInitialLoading ? (
             /* Loading State */
             <div className="flex-1 min-w-full min-h-full">
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-                {[...Array(12)].map((_, i) => (
-                  <SkeletonCard key={`skeleton-${i}`} />
-                ))}
-              </div>
+              <SkeletonGrid count={12} />
             </div>
           ) : displayTotal === 0 ? (
             /* Empty State */
@@ -221,7 +219,12 @@ export default function AlbumsPage() {
               <div className="space-y-6 no-scrollbar">
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6 no-scrollbar">
                   {displayItems.map((album) => (
-                    <AlbumCard key={album.Id} album={album} />
+                    <AlbumCard
+                      key={album.Id}
+                      album={album}
+                      onClick={onAlbumClick}
+                      onArtistClick={onArtistClick}
+                    />
                   ))}
                 </div>
 
@@ -250,82 +253,6 @@ export default function AlbumsPage() {
             </div>
           )}
         </div>
-      </div>
-    </div>
-  );
-}
-
-// Skeleton Card Component
-function SkeletonCard() {
-  return (
-    <div className="space-y-3 animate-pulse">
-      <div className="aspect-square bg-gray-600 rounded-lg"></div>
-      <div className="space-y-2">
-        <div className="h-4 bg-gray-600 rounded"></div>
-        <div className="h-3 bg-gray-700 rounded w-3/4"></div>
-      </div>
-    </div>
-  );
-}
-
-// Album Card Component
-interface AlbumCardProps {
-  album: MusicItem;
-}
-
-function AlbumCard({ album }: AlbumCardProps) {
-  const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
-  const [imageError, setImageError] = useState(false);
-
-  useEffect(() => {
-    const loadImage = async () => {
-      if (album.ImageTags && Object.keys(album.ImageTags).length > 0) {
-        const url = await JellyfinApiService.getImageUrl(album.Id, "Primary");
-        if (url) setImageUrl(url);
-      }
-    };
-    loadImage();
-  }, [album.Id]);
-
-  return (
-    <div className="group cursor-pointer">
-      <div className="relative aspect-square mb-3">
-        {imageUrl && !imageError ? (
-          <img
-            src={imageUrl}
-            alt={album.Name}
-            className="w-full h-full object-cover rounded-lg shadow-lg group-hover:shadow-xl transition-shadow"
-            onError={() => setImageError(true)}
-          />
-        ) : (
-          <ImagePlaceholder type="album" size="large" />
-        )}
-        <div className="absolute inset-0 bg-black/40 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"></div>
-
-        {/* Album track count overlay */}
-        {album.ChildCount && (
-          <div className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full">
-            {album.ChildCount} songs
-          </div>
-        )}
-      </div>
-
-      <div className="space-y-1">
-        <h3 className="font-medium text-white truncate group-hover:text-red-300 transition-colors">
-          {album.Name}
-        </h3>
-        <p className="text-sm text-gray-400 truncate">{getArtistName(album)}</p>
-        {album.ProductionYear && (
-          <div className="flex items-center gap-2 text-xs text-gray-500">
-            <span>{album.ProductionYear}</span>
-            {album.ChildCount && <span>•</span>}
-          </div>
-        )}
-        {album.ChildCount && (
-          <p className="text-xs text-gray-500">
-            {album.ChildCount} track{album.ChildCount !== 1 ? "s" : ""}
-          </p>
-        )}
       </div>
     </div>
   );

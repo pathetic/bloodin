@@ -1,13 +1,19 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { IconSearch, IconMusic, IconPlayerPlay } from "@tabler/icons-react";
+import { IconSearch, IconMusic } from "@tabler/icons-react";
 import { JellyfinApiService } from "../services/jellyfinApi";
 import { cacheService } from "../services/cacheService";
 import type { MusicItem } from "../types/jellyfin";
-import { formatDuration, getArtistName } from "../types/jellyfin";
-import ImagePlaceholder from "../components/ImagePlaceholder";
+import { formatDuration } from "../types/jellyfin";
 import { useAudioPlayer } from "../contexts/AudioPlayerContext";
+import { SkeletonGrid } from "../components/LoadingSkeleton";
+import ImagePlaceholder from "../components/ImagePlaceholder";
+import ArtistLinks from "../components/ArtistLinks";
 
-export default function SongsPage() {
+interface SongsPageProps {
+  onArtistClick?: (artistId: string, artistName: string) => void;
+}
+
+export default function SongsPage({ onArtistClick }: SongsPageProps) {
   const [songs, setSongs] = useState<MusicItem[]>([]);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -188,9 +194,7 @@ export default function SongsPage() {
             <div className="bg-white/5 backdrop-blur-sm rounded-xl overflow-hidden flex-1 flex flex-col min-w-full min-h-full">
               <TableHeader />
               <div className="flex-1 min-w-full min-h-full">
-                {[...Array(10)].map((_, i) => (
-                  <SkeletonRow key={`skeleton-${i}`} index={i + 1} />
-                ))}
+                <SkeletonGrid count={10} type="table" />
               </div>
             </div>
           ) : displayTotal === 0 ? (
@@ -220,20 +224,20 @@ export default function SongsPage() {
               >
                 <div className="min-w-full">
                   {displayItems.map((song, index) => (
-                    <SongRow key={song.Id} song={song} index={index + 1} />
+                    <SongRow
+                      key={song.Id}
+                      song={song}
+                      index={index + 1}
+                      onArtistClick={onArtistClick}
+                    />
                   ))}
 
                   {/* Loading More Indicator */}
                   {isLoadingMore && !isSearchMode && (
-                    <div
-                      className="grid grid-cols-12 gap-4 p-4 border-b border-white/5 min-w-full"
-                      style={{ height: 72 }}
-                    >
-                      <div className="col-span-12 flex items-center justify-center">
-                        <div className="flex items-center space-x-2 text-gray-400">
-                          <div className="w-4 h-4 border-2 border-gray-600 border-t-white rounded-full animate-spin"></div>
-                          <span>Loading more songs...</span>
-                        </div>
+                    <div className="p-4 text-center">
+                      <div className="flex items-center justify-center space-x-2 text-gray-400">
+                        <div className="w-4 h-4 border-2 border-gray-600 border-t-white rounded-full animate-spin"></div>
+                        <span>Loading more songs...</span>
                       </div>
                     </div>
                   )}
@@ -272,43 +276,14 @@ function TableHeader() {
   );
 }
 
-// Skeleton Row Component
-function SkeletonRow({ index }: { index: number }) {
-  return (
-    <div
-      className="grid grid-cols-12 gap-4 p-4 animate-pulse border-b border-white/5 min-w-full"
-      style={{ height: 72 }}
-    >
-      <div className="col-span-1 flex items-center">
-        <div className="w-4 h-4 bg-gray-600 rounded"></div>
-      </div>
-      <div className="col-span-5 flex items-center space-x-3">
-        <div className="w-10 h-10 bg-gray-600 rounded"></div>
-        <div className="space-y-2">
-          <div className="h-4 bg-gray-600 rounded w-32"></div>
-          <div className="h-3 bg-gray-700 rounded w-24"></div>
-        </div>
-      </div>
-      <div className="col-span-3 flex items-center">
-        <div className="h-3 bg-gray-700 rounded w-20"></div>
-      </div>
-      <div className="col-span-2 flex items-center">
-        <div className="h-3 bg-gray-700 rounded w-24"></div>
-      </div>
-      <div className="col-span-1 flex items-center justify-end">
-        <div className="h-3 bg-gray-700 rounded w-12"></div>
-      </div>
-    </div>
-  );
-}
-
-// Song Row Component
+// Song Row Component for MusicItem (Jellyfin format)
 interface SongRowProps {
   song: MusicItem;
   index: number;
+  onArtistClick?: (artistId: string, artistName: string) => void;
 }
 
-function SongRow({ song, index }: SongRowProps) {
+function SongRow({ song, index, onArtistClick }: SongRowProps) {
   const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
   const [imageError, setImageError] = useState(false);
   const audioPlayer = useAudioPlayer();
@@ -374,14 +349,20 @@ function SongRow({ song, index }: SongRowProps) {
         </div>
         <div className="min-w-0">
           <h4 className="font-medium text-white truncate">{song.Name}</h4>
-          <p className="text-sm text-gray-400 truncate">
-            {getArtistName(song)}
-          </p>
+          <ArtistLinks
+            item={song}
+            onArtistClick={onArtistClick}
+            className="text-sm text-gray-400 truncate"
+          />
         </div>
       </div>
 
       <div className="col-span-3 flex items-center">
-        <span className="text-gray-300 truncate">{getArtistName(song)}</span>
+        <ArtistLinks
+          item={song}
+          onArtistClick={onArtistClick}
+          className="text-gray-300 truncate"
+        />
       </div>
 
       <div className="col-span-2 flex items-center">

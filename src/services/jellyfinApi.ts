@@ -311,4 +311,64 @@ export class JellyfinApiService {
       };
     }
   }
+
+  /**
+   * Get songs from a specific album
+   */
+  static async getAlbumSongs(albumId: string): Promise<MusicLibraryResult> {
+    try {
+      const result = await invoke<MusicLibraryResult>("get_album_songs", {
+        albumId,
+      });
+      return result;
+    } catch (error) {
+      console.error("Failed to get album songs:", error);
+      return {
+        success: false,
+        message: `Failed to get album songs: ${error}`,
+      };
+    }
+  }
+
+  /**
+   * Get songs from a specific artist
+   */
+  static async getArtistSongs(artistId: string): Promise<MusicLibraryResult> {
+    try {
+      const result = await invoke<MusicLibraryResult>("get_artist_songs", {
+        artistId,
+      });
+      return result;
+    } catch (error) {
+      console.error("Failed to get artist songs:", error);
+      return {
+        success: false,
+        message: `Failed to get artist songs: ${error}`,
+      };
+    }
+  }
+
+  /**
+   * Get details for a specific item (album, artist, etc.)
+   */
+  static async getItem(
+    itemId: string
+  ): Promise<{ success: boolean; item?: any; message?: string }> {
+    try {
+      const result = await invoke<{
+        success: boolean;
+        item?: any;
+        message?: string;
+      }>("get_item", {
+        itemId,
+      });
+      return result;
+    } catch (error) {
+      console.error("Failed to get item:", error);
+      return {
+        success: false,
+        message: `Failed to get item: ${error}`,
+      };
+    }
+  }
 }

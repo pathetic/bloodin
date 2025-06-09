@@ -1,42 +1,13 @@
 import { useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
-import HomePage from "./pages/HomePage";
-import SongsPage from "./pages/SongsPage";
-import AlbumsPage from "./pages/AlbumsPage";
+import MainContent from "./components/MainContent";
 import Layout from "./components/Layout";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { AudioPlayerProvider } from "./contexts/AudioPlayerContext";
 import { NavigationPage } from "./types";
 
-// Placeholder components for other pages (to be implemented later)
-const ArtistsPage = () => (
-  <div className="p-6">
-    <h1 className="text-2xl font-bold text-white mb-4">Artists</h1>
-    <p className="text-gray-400">Artists page coming soon...</p>
-  </div>
-);
-
-const PlaylistsPage = () => (
-  <div className="p-6">
-    <h1 className="text-2xl font-bold text-white mb-4">Playlists</h1>
-    <p className="text-gray-400">Playlists page coming soon...</p>
-  </div>
-);
-
-const SearchPage = () => (
-  <div className="p-6">
-    <h1 className="text-2xl font-bold text-white mb-4">Search</h1>
-    <p className="text-gray-400">Search page coming soon...</p>
-  </div>
-);
-
-const SettingsPage = () => (
-  <div className="p-6">
-    <h1 className="text-2xl font-bold text-white mb-4">Settings</h1>
-    <p className="text-gray-400">Settings page coming soon...</p>
-  </div>
-);
+// All page components are now handled in MainContent
 
 function AppContent() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -46,16 +17,7 @@ function AppContent() {
     setCurrentPage(page);
   };
 
-  // Component mapping for navigation
-  const pageComponents = {
-    home: <HomePage onPageChange={handlePageChange} />,
-    songs: <SongsPage />,
-    albums: <AlbumsPage />,
-    artists: <ArtistsPage />,
-    playlists: <PlaylistsPage />,
-    search: <SearchPage />,
-    settings: <SettingsPage />,
-  };
+  // No longer needed - MainContent handles all pages
 
   // Show loading spinner while checking authentication
   if (isLoading) {
@@ -80,7 +42,7 @@ function AppContent() {
   return (
     <AudioPlayerProvider>
       <Layout currentPage={currentPage} onPageChange={handlePageChange}>
-        {pageComponents[currentPage]}
+        <MainContent currentPage={currentPage} />
       </Layout>
     </AudioPlayerProvider>
   );

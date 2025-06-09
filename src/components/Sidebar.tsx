@@ -75,16 +75,11 @@ const Sidebar: React.FC<SidebarProps> = ({
       label: "Albums",
       icon: <IconDisc size={20} />,
     },
-    {
-      id: "artists" as NavigationPage,
-      label: "Artists",
-      icon: <IconMicrophone size={20} />,
-    },
-    {
-      id: "playlists" as NavigationPage,
-      label: "Playlists",
-      icon: <IconPlaylist size={20} />,
-    },
+    // {
+    //   id: "playlists" as NavigationPage,
+    //   label: "Playlists",
+    //   icon: <IconPlaylist size={20} />,
+    // },
   ];
 
   const bottomNavItems = [

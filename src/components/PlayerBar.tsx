@@ -18,6 +18,7 @@ import {
   IconPlaylist,
   IconMaximize,
   IconHistory,
+  IconArrowsMaximize,
 } from "@tabler/icons-react";
 
 interface PlayerBarProps {
@@ -40,6 +41,7 @@ interface PlayerBarProps {
   onRepeat: () => void;
   onStartSeeking?: () => void;
   onStopSeeking?: () => void;
+  onFullscreen?: () => void;
 }
 
 const PlayerBar: React.FC<PlayerBarProps> = ({
@@ -62,11 +64,13 @@ const PlayerBar: React.FC<PlayerBarProps> = ({
   onRepeat,
   onStartSeeking,
   onStopSeeking,
+  onFullscreen,
 }) => {
   const [localSeekPosition, setLocalSeekPosition] = useState(0);
   const [previousVolume, setPreviousVolume] = useState(0.7);
   const [shouldScroll, setShouldScroll] = useState(false);
   const [isProgressHovered, setIsProgressHovered] = useState(false);
+  const [isTitleHovered, setIsTitleHovered] = useState(false);
   const [previousClickTimeout, setPreviousClickTimeout] = useState<
     number | null
   >(null);
@@ -81,14 +85,23 @@ const PlayerBar: React.FC<PlayerBarProps> = ({
   const recentlyPlayed = audioPlayerContext.getRecentlyPlayed();
   const lastPlayedSong = audioPlayerContext.getLastPlayedSong();
 
+  // Use current song if playing, otherwise show last played song
+  const displaySong =
+    currentSong || (lastPlayedSong ? lastPlayedSong.song : null);
+  const isShowingLastPlayed = !currentSong && lastPlayedSong;
+
   // Check if text needs scrolling
   useEffect(() => {
-    if (titleRef.current && containerRef.current && currentSong?.title) {
+    if (titleRef.current && containerRef.current && displaySong?.title) {
       const titleWidth = titleRef.current.scrollWidth;
       const containerWidth = containerRef.current.clientWidth;
-      setShouldScroll(titleWidth > containerWidth);
+      const titleLength = displaySong.title.length;
+
+      // Enable scrolling if title is long enough OR doesn't fit in container
+      // Minimum 15 characters or if text overflows
+      setShouldScroll(titleLength > 15 || titleWidth > containerWidth + 10);
     }
-  }, [currentSong?.title]);
+  }, [displaySong?.title]);
 
   // Close recent songs dropdown when clicking outside
   useEffect(() => {
@@ -303,11 +316,6 @@ const PlayerBar: React.FC<PlayerBarProps> = ({
     }
   };
 
-  // Use current song if playing, otherwise show last played song
-  const displaySong =
-    currentSong || (lastPlayedSong ? lastPlayedSong.song : null);
-  const isShowingLastPlayed = !currentSong && lastPlayedSong;
-
   if (!displaySong) {
     return (
       <div className="h-20 backdrop-blur-xl bg-black/30 border-t border-white/10 flex items-center justify-center">
@@ -388,9 +396,6 @@ const PlayerBar: React.FC<PlayerBarProps> = ({
                         {song.artist} • {song.album}
                       </p>
                     </div>
-                    <button className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-white/10 transition-all">
-                      <IconPlayerPlay size={10} className="text-gray-400" />
-                    </button>
                   </div>
                 ))}
               </div>
@@ -405,8 +410,14 @@ const PlayerBar: React.FC<PlayerBarProps> = ({
           0% {
             transform: translateX(0);
           }
-          100% {
+          50% {
             transform: translateX(-50%);
+          }
+          50.01% {
+            transform: translateX(-50%);
+          }
+          100% {
+            transform: translateX(0);
           }
         }
         .animate-scroll {
@@ -480,21 +491,26 @@ const PlayerBar: React.FC<PlayerBarProps> = ({
             <div className="relative overflow-hidden">
               <h4
                 ref={titleRef}
-                className={`font-medium whitespace-nowrap ${
-                  shouldScroll ? "animate-scroll" : "truncate"
+                className={`font-medium whitespace-nowrap transition-all duration-300 ${
+                  shouldScroll && isTitleHovered ? "animate-scroll" : "truncate"
                 } ${isShowingLastPlayed ? "text-gray-300" : "text-white"}`}
                 style={{
-                  ...(shouldScroll && {
-                    animationDuration: `${Math.max(
-                      8,
-                      displaySong.title.length * 0.2
-                    )}s`,
-                  }),
+                  ...(shouldScroll &&
+                    isTitleHovered && {
+                      animationDuration: `${Math.max(
+                        8,
+                        displaySong.title.length * 0.12
+                      )}s`,
+                    }),
                 }}
+                onMouseEnter={() => setIsTitleHovered(true)}
+                onMouseLeave={() => setIsTitleHovered(false)}
               >
                 {displaySong.title}
-                {shouldScroll && (
-                  <span className="inline-block ml-8">{displaySong.title}</span>
+                {shouldScroll && isTitleHovered && (
+                  <span className="inline-block ml-12">
+                    {displaySong.title}
+                  </span>
                 )}
               </h4>
             </div>
@@ -515,7 +531,7 @@ const PlayerBar: React.FC<PlayerBarProps> = ({
         {/* Center - Player Controls */}
         <div className="flex-1 flex flex-col items-center justify-center">
           {/* Control Buttons */}
-          <div className="flex items-center justify-center space-x-6 mb-1">
+          <div className="flex items-center justify-center space-x-6 mb-[0.05rem] pt-2">
             <button
               onClick={onShuffle}
               className={`p-2 rounded-xl transition-all duration-200 cursor-pointer ${
@@ -643,6 +659,14 @@ const PlayerBar: React.FC<PlayerBarProps> = ({
                 }}
               />
             </div>
+
+            <button
+              onClick={onFullscreen}
+              className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              title="Enter fullscreen mode"
+            >
+              <IconArrowsMaximize size={16} />
+            </button>
 
             <button
               ref={historyButtonRef}
