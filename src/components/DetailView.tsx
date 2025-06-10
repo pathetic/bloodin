@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   IconPlayerPlay,
@@ -11,7 +11,6 @@ import {
 } from "@tabler/icons-react";
 import { JellyfinApiService } from "../services/jellyfinApi";
 import { useAudioPlayer } from "../contexts/AudioPlayerContext";
-import ImagePlaceholder from "./ImagePlaceholder";
 import SongsTable from "./SongsTable";
 import type { MusicItem } from "../types/jellyfin";
 import { formatDetailedDuration, getArtistName } from "../types/jellyfin";
@@ -92,7 +91,7 @@ export default function DetailView({ type }: DetailViewProps) {
 
   const BATCH_SIZE = 100;
 
-  const handleArtistClick = (artistId: string, artistName: string) => {
+  const handleArtistClick = (artistId: string, _artistName: string) => {
     navigate(`/artist/${artistId}`);
   };
 

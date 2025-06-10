@@ -2,10 +2,8 @@ import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 
 import {
-  IconPalette,
   IconCheck,
   IconChevronDown,
-  IconMusic,
   IconPlayerPlay,
 } from "@tabler/icons-react";
 

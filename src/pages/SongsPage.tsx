@@ -1,10 +1,8 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { IconSearch, IconMusic } from "@tabler/icons-react";
 import { JellyfinApiService } from "../services/jellyfinApi";
-import { cacheService } from "../services/cacheService";
 import type { MusicItem } from "../types/jellyfin";
-import { useAudioPlayer } from "../contexts/AudioPlayerContext";
 import SongsTable from "../components/SongsTable";
 
 export default function SongsPage() {
@@ -17,11 +15,10 @@ export default function SongsPage() {
   const [totalSongs, setTotalSongs] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const audioPlayer = useAudioPlayer();
 
   const BATCH_SIZE = 100;
 
-  const handleArtistClick = (artistId: string, artistName: string) => {
+  const handleArtistClick = (artistId: string, _artistName: string) => {
     navigate(`/artist/${artistId}`);
   };
 

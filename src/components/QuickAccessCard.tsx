@@ -1,5 +1,4 @@
 import React from "react";
-import type { NavigationPage } from "../types";
 
 interface QuickAccessCardProps {
   icon: React.ReactNode;

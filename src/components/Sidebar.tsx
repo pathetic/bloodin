@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { Song } from "../types";
 import { useAuth } from "../contexts/AuthContext";
@@ -8,11 +8,8 @@ import {
   IconHome,
   IconMusic,
   IconDisc,
-  IconMicrophone,
   IconPlaylist,
   IconSettings,
-  IconMenu2,
-  IconX,
   IconChevronsLeft,
   IconPlayerPlay,
   IconLogout,

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import { PlayerBar } from "./PlayerBar";
@@ -17,7 +17,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [isImageExpanded, setIsImageExpanded] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [_dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const isDraggingRef = useRef(false);
   const dragOffsetRef = useRef({ x: 0, y: 0 });
   const [imagePosition, setImagePosition] = useState(() => {
@@ -34,7 +34,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   });
   const audioPlayer = useAudioPlayer();
 
-  const handleArtistClick = (artistId: string, artistName: string) => {
+  const handleArtistClick = (artistId: string, _artistName: string) => {
     navigate(`/artist/${artistId}`);
   };
 
@@ -59,9 +59,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   };
 
   const getCornerPosition = (corner: string) => {
-    const margin = "4"; // 32px margin - better padding from edges
-    const bottomMargin = "4"; // 80px from bottom - closer to PlayerBar but not overlapping
-
     let position;
     switch (corner) {
       case "top-left":

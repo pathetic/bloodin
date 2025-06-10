@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { IconPlayerPlay, IconMusic } from "@tabler/icons-react";
+import { useState, useEffect } from "react";
+import { IconPlayerPlay } from "@tabler/icons-react";
 import { useAudioPlayer } from "../contexts/AudioPlayerContext";
 import { JellyfinApiService } from "../services/jellyfinApi";
 import ImagePlaceholder from "./ImagePlaceholder";

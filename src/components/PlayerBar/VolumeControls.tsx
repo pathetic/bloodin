@@ -1,5 +1,4 @@
-import React, { useState, useRef } from "react";
-import { Song } from "../../types";
+import { useState } from "react";
 import { useAudioPlayer } from "../../contexts/AudioPlayerContext";
 import {
   IconVolume,

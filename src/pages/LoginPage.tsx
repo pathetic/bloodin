@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { JellyfinApiService } from "../services/jellyfinApi";
 import type { ConnectionForm } from "../types/jellyfin";

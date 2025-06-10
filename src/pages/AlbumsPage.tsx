@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { IconDisc, IconSearch } from "@tabler/icons-react";
 import { JellyfinApiService } from "../services/jellyfinApi";
-import { cacheService } from "../services/cacheService";
+// import { cacheService } from "../services/cacheService";
 import type { MusicItem } from "../types/jellyfin";
 import AlbumCard from "../components/AlbumCard";
 import { SkeletonGrid } from "../components/LoadingSkeleton";
@@ -19,8 +19,8 @@ export default function AlbumsPage() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const fetchTimeoutRef = useRef<number>();
   const albumsCountRef = useRef<number>(0);
-  const [hasMore, setHasMore] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // const [hasMore, setHasMore] = useState(true);
+  // const [error, setError] = useState<string | null>(null);
 
   const BATCH_SIZE = 24;
   const SCROLL_DEBOUNCE_MS = 200;
@@ -29,7 +29,7 @@ export default function AlbumsPage() {
     navigate(`/album/${album.Id}`);
   };
 
-  const handleArtistClick = (artistId: string, artistName: string) => {
+  const handleArtistClick = (artistId: string, _artistName: string) => {
     navigate(`/artist/${artistId}`);
   };
 

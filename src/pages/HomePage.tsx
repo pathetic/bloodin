@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useAudioPlayer } from "../contexts/AudioPlayerContext";
 import { JellyfinApiService } from "../services/jellyfinApi";
@@ -150,7 +150,7 @@ export default function HomePage() {
     navigate(`/album/${album.Id}`);
   };
 
-  const handleArtistClick = (artistId: string, artistName: string) => {
+  const handleArtistClick = (artistId: string, _artistName: string) => {
     navigate(`/artist/${artistId}`);
   };
 

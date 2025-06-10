@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Song } from "../../types";
 import { useAudioPlayer } from "../../contexts/AudioPlayerContext";
 import { IconHeart, IconMusic, IconMaximize } from "@tabler/icons-react";

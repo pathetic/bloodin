@@ -1,5 +1,3 @@
-import React from "react";
-
 interface SkeletonCardProps {
   type?: "card" | "row" | "table";
   count?: number;
@@ -20,6 +18,7 @@ export function SkeletonCard() {
 export function SkeletonRow({ index }: { index: number }) {
   return (
     <div
+      key={`skeleton-row-${index}`}
       className="grid grid-cols-12 gap-4 p-4 animate-pulse border-b border-white/5 min-w-full"
       style={{ height: 72 }}
     >

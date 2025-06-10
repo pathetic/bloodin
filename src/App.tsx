@@ -9,7 +9,6 @@ import LoginPage from "./pages/LoginPage";
 import HomePage from "./pages/HomePage";
 import SongsPage from "./pages/SongsPage";
 import AlbumsPage from "./pages/AlbumsPage";
-import SearchPage from "./pages/SearchPage";
 import SettingsPage from "./pages/SettingsPage";
 import DetailView from "./components/DetailView";
 import Layout from "./components/Layout";
@@ -59,7 +58,6 @@ function AppContent() {
           <Route path="/home" element={<HomePage />} />
           <Route path="/songs" element={<SongsPage />} />
           <Route path="/albums" element={<AlbumsPage />} />
-          <Route path="/search" element={<SearchPage />} />
           <Route path="/settings" element={<SettingsPage />} />
 
           {/* Detail view routes */}

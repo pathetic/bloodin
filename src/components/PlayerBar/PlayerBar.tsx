@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Song } from "../../types";
 import { useAudioPlayer } from "../../contexts/AudioPlayerContext";
 import { AudioPlayerAPI } from "../../services/audioPlayerApi";
@@ -70,7 +70,7 @@ const PlayerBar: React.FC<PlayerBarProps> = ({
   const lastPlayedSong = audioPlayerContext.getLastPlayedSong();
 
   // Force re-render when queue changes
-  const queueVersion = audioPlayerContext.queueVersion;
+  // const queueVersion = audioPlayerContext.queueVersion;
 
   // Use current song if playing, otherwise show last played song
   const displaySong =

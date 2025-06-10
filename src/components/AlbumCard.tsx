@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { IconExternalLink } from "@tabler/icons-react";
 import { JellyfinApiService } from "../services/jellyfinApi";
 import ImagePlaceholder from "./ImagePlaceholder";

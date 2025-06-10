@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import { Song } from "../../types";
+import { useState } from "react";
 import { useAudioPlayer } from "../../contexts/AudioPlayerContext";
 import {
   IconPlaylist,
@@ -27,7 +26,7 @@ const QueuePanel: React.FC<QueuePanelProps> = ({
 
   const audioPlayerContext = useAudioPlayer();
   // Force re-render when queue changes
-  const queueVersion = audioPlayerContext.queueVersion;
+  // const queueVersion = audioPlayerContext.queueVersion;
 
   if (!isOpen) {
     return null;
@@ -93,7 +92,7 @@ const QueuePanel: React.FC<QueuePanelProps> = ({
                     e.dataTransfer.effectAllowed = "move";
                     setDraggedItem(queueItem.song.id);
                   }}
-                  onDragEnd={(e) => {
+                  onDragEnd={(_e) => {
                     console.log(`🏁 DRAG END: ${queueItem.song.title}`);
                     setDraggedItem(null);
                     setDragOverIndex(null);

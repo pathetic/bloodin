@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { Song } from "../types";
 import {
@@ -69,7 +69,7 @@ const FullscreenPlayer: React.FC<FullscreenPlayerProps> = ({
 }) => {
   const [localSeekPosition, setLocalSeekPosition] = useState(0);
   const [previousVolume, setPreviousVolume] = useState(0.7);
-  const [isProgressHovered, setIsProgressHovered] = useState(false);
+  const [_isProgressHovered, setIsProgressHovered] = useState(false);
   const [showExitButton, setShowExitButton] = useState(false);
   const [bubbles, setBubbles] = useState<Bubble[]>([]);
   const [albumColors, setAlbumColors] = useState({

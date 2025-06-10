@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useAudioPlayer } from "../contexts/AudioPlayerContext";
 import { JellyfinApiService } from "../services/jellyfinApi";
 import { formatDuration } from "../types/jellyfin";
