@@ -127,19 +127,43 @@ const Sidebar: React.FC<SidebarProps> = ({
             isCollapsed ? "justify-center" : "justify-between"
           }`}
         >
+          {/* User Profile */}
           {!isCollapsed && (
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-red-700 rounded-lg flex items-center justify-center">
-                <IconPlayerPlay size={16} className="text-white" />
+            <div className="p-3 rounded-xl bg-base-content/10 border border-white/10">
+              <div className="flex items-center justify-between gap-8">
+                <div className="absolute top-[0.8rem] left-[0.8rem] w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                <div className="flex items-center space-x-3">
+                  {/* <div className="w-8 h-8 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center">
+                    <span className="text-xs font-semibold text-white">
+                      {userName ? userName.charAt(0).toUpperCase() : "U"}
+                    </span>
+                  </div> */}
+                  <div>
+                    <p className="flex flex-row items-center gap-1 text-sm font-medium text-base-content">
+                      {userName || "User"}{" "}
+                      <span className="text-xs text-base-content/60">
+                        ({serverName || "Connected"})
+                      </span>
+                    </p>
+                    <p className="text-xs text-base-content/60">
+                      {formatServerUrl(serverUrl)}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="cursor-pointer p-1.5 rounded-lg hover:bg-white/10 text-base-content/60 hover:text-red-500 transition-all duration-200"
+                >
+                  <IconLogout size={14} />
+                </button>
               </div>
-              <span className="text-lg font-semibold text-white">Bloodin</span>
             </div>
           )}
           <button
             onClick={onToggleCollapse}
             className={`${
               isCollapsed ? "p-3" : "p-2"
-            } cursor-pointer rounded-lg hover:bg-white/10 text-base-content/60 hover:text-white transition-all duration-200`}
+            } cursor-pointer rounded-lg hover:bg-base-content/30 text-base-content/60 hover:text-white transition-all duration-200`}
             title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             {isCollapsed ? (
@@ -164,7 +188,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                   } rounded-xl transition-all duration-200 group ${
                     isActive
                       ? "bg-gradient-to-r from-red-500 to-red-700 text-white shadow-lg"
-                      : "text-base-content/70 hover:text-white hover:bg-white/10"
+                      : "text-base-content/70 hover:text-white hover:bg-base-content/30"
                   }`
                 }
                 title={isCollapsed ? item.label : undefined}
@@ -219,7 +243,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                       className={`flex items-center w-full cursor-pointer px-3 py-2 rounded-lg transition-all duration-200 group ${
                         isPlaylistActive(playlist.Id)
                           ? "bg-gradient-to-r from-red-500 to-red-700 text-white shadow-lg"
-                          : "text-base-content/70 hover:text-white hover:bg-white/10"
+                          : "text-base-content/70 hover:text-white hover:bg-base-content/30"
                       }`}
                       title={playlist.Name}
                     >
@@ -292,62 +316,6 @@ const Sidebar: React.FC<SidebarProps> = ({
               </NavLink>
             ))}
           </div>
-
-          {/* User Profile */}
-          {isCollapsed ? (
-            <div className="space-y-2">
-              <div className="flex justify-center">
-                <div
-                  className="w-10 h-10 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center border-2 border-green-400"
-                  title={`${userName || "User"} - ${
-                    serverName || "Server"
-                  } (${formatServerUrl(serverUrl)})`}
-                >
-                  <span className="text-sm font-semibold text-white">
-                    {userName ? userName.charAt(0).toUpperCase() : "U"}
-                  </span>
-                </div>
-              </div>
-              <div className="flex justify-center">
-                <button
-                  onClick={handleLogout}
-                  className="cursor-pointer p-2 rounded-lg hover:bg-white/10 text-base-content/60 hover:text-red-500 transition-all duration-200"
-                  title="Logout"
-                >
-                  <IconLogout size={16} />
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="p-3 rounded-xl bg-white/5 border border-white/10">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center">
-                    <span className="text-xs font-semibold text-white">
-                      {userName ? userName.charAt(0).toUpperCase() : "U"}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="flex flex-row items-center gap-1 text-sm font-medium text-base-content">
-                      {userName || "User"}{" "}
-                      <span className="text-xs text-base-content/60">
-                        ({serverName || "Connected"})
-                      </span>
-                    </p>
-                    <p className="text-xs text-base-content/60">
-                      {formatServerUrl(serverUrl)}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={handleLogout}
-                  className="cursor-pointer p-1.5 rounded-lg hover:bg-white/10 text-base-content/60 hover:text-red-500 transition-all duration-200"
-                >
-                  <IconLogout size={14} />
-                </button>
-              </div>
-            </div>
-          )}
 
           {/* Expanded Album Art - Below user info */}
           {isImageExpanded && !isCollapsed && currentSong && (

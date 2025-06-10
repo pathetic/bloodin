@@ -4,7 +4,9 @@ import Sidebar from "./Sidebar";
 import { PlayerBar } from "./PlayerBar";
 import FullscreenPlayer from "./FullscreenPlayer";
 import { useAudioPlayer } from "../contexts/AudioPlayerContext";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { IconMusic, IconMinimize } from "@tabler/icons-react";
+import TitleBar from "./TitleBar";
 // import { IconSearch, IconMoon, IconBell } from "@tabler/icons-react";
 
 interface LayoutProps {
@@ -206,10 +208,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           console.log("🎵 Spacebar triggered play/pause");
         }
       }
-
-      if (e.key.toLowerCase() === "f") {
-        handleFullscreen();
-      }
     };
 
     // Add the event listener
@@ -258,6 +256,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Regular App Layout - Hidden when fullscreen */}
       {!isFullscreen && (
         <div className="h-screen  flex flex-col relative overflow-hidden">
+          {/* Custom Titlebar */}
+          <TitleBar className="relative z-30" />
+
           {/* Animated background */}
           <div className="absolute inset-0 overflow-hidden">
             <div className="absolute -top-40 -right-40 w-80 h-80 bg-red-500 rounded-full mix-blend-multiply filter blur-xl opacity-20"></div>

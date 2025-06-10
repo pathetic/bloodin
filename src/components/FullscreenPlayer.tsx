@@ -333,7 +333,7 @@ const FullscreenPlayer: React.FC<FullscreenPlayerProps> = ({
   // Handle ESC key, F key, and exit
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" || e.key.toLowerCase() === "f") {
+      if (e.key === "Escape") {
         handleExit();
       }
     };

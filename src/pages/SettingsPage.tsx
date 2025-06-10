@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 
 import {
@@ -10,6 +10,7 @@ import {
 export default function SettingsPage() {
   const [currentTheme, setCurrentTheme] = useState("dark");
   const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState(false);
+  const themeDropdownRef = useRef<HTMLDivElement>(null);
 
   const themes = [
     { name: "light", label: "Light", type: "light" },
@@ -54,6 +55,23 @@ export default function SettingsPage() {
     }
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        themeDropdownRef.current &&
+        !themeDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsThemeDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   const handleThemeChange = (themeName: string) => {
     setCurrentTheme(themeName);
     document.documentElement.setAttribute("data-theme", themeName);
@@ -70,8 +88,8 @@ export default function SettingsPage() {
   return (
     <div className="h-full flex flex-col">
       {/* Simple Header */}
-      <div className="flex-shrink-0 p-6 border-b border-white/10">
-        <h1 className="text-2xl font-bold text-base-content">Settings</h1>
+      <div className="flex-shrink-0 p-6 bg-black/15 backdrop-blur-md border-b border-white/10">
+        <h1 className="text-3xl font-bold text-base-content">Settings</h1>
         <p className="text-base-content/60 mt-1">
           Customize your music experience
         </p>
@@ -94,7 +112,7 @@ export default function SettingsPage() {
               </div>
 
               {/* Theme Selector */}
-              <div className="relative">
+              <div className="relative" ref={themeDropdownRef}>
                 <button
                   onClick={() => setIsThemeDropdownOpen(!isThemeDropdownOpen)}
                   className="cursor-pointer w-full flex items-center justify-between p-3 bg-base-200 hover:bg-base-300 border border-base-300 rounded-lg transition-colors"
