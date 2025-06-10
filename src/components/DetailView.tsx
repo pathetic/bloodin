@@ -391,7 +391,7 @@ export default function DetailView({ type }: DetailViewProps) {
         <div className="flex items-center space-x-4 mb-6">
           <button
             onClick={handleBack}
-            className="cursor-pointer p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+            className="cursor-pointer p-2 rounded-lg text-base-content bg-base-content/10 hover:bg-base-content/20 transition-colors"
           >
             <IconArrowLeft size={20} />
           </button>

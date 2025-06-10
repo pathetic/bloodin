@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { JellyfinApiService } from "../services/jellyfinApi";
 import type { ConnectionForm } from "../types/jellyfin";
+import { IconPlayerPlay, IconWifi, IconLogin } from "@tabler/icons-react";
 
 interface LoginPageProps {
   onLogin?: () => void;
@@ -66,46 +67,31 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-red-950 to-black flex items-center justify-center p-4 overflow-hidden relative">
-      {/* Animated background orbs */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-red-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-red-600 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse animation-delay-200"></div>
-        <div className="absolute top-40 left-1/2 w-80 h-80 bg-red-700 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse animation-delay-400"></div>
-      </div>
-
+    <div className="min-h-screen bg-base-100 flex items-center justify-center p-4">
       {/* Main content */}
-      <div className="relative z-10 w-full max-w-md">
+      <div className="w-full max-w-md">
         {/* Logo and title */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
             <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-red-700 rounded-2xl flex items-center justify-center shadow-lg">
-              <svg
-                className="w-8 h-8 text-white"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
-              </svg>
+              <IconPlayerPlay size={32} className="text-white" />
             </div>
           </div>
-          <h1 className="text-4xl font-bold text-white mb-2 bg-gradient-to-r from-white to-red-200 bg-clip-text text-transparent">
-            Bloodin
-          </h1>
-          <p className="text-red-200 text-lg">
+          <h1 className="text-4xl font-bold text-base-content mb-2">Bloodin</h1>
+          <p className="text-base-content/60 text-lg">
             Connect to your Jellyfin server
           </p>
         </div>
 
         {/* Login form */}
-        <div className="backdrop-blur-xl bg-white/10 rounded-3xl p-8 shadow-2xl border border-white/20">
+        <div className="bg-base-200 rounded-2xl p-8 shadow-xl border border-base-300">
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-4">
               {/* Server URL */}
               <div>
                 <label
                   htmlFor="serverUrl"
-                  className="block text-sm font-medium text-red-100 mb-2"
+                  className="block text-sm font-medium text-base-content mb-2"
                 >
                   Server URL
                 </label>
@@ -120,7 +106,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                     }))
                   }
                   placeholder="https://jellyfin.example.com"
-                  className="input input-bordered w-full bg-white/10 border-white/20 text-white placeholder-red-200 focus:border-red-400 focus:ring-2 focus:ring-red-400/20 backdrop-blur-sm"
+                  className="input input-bordered w-full bg-base-100 border-base-300 text-base-content placeholder-base-content/40 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                   required
                 />
               </div>
@@ -129,7 +115,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               <div>
                 <label
                   htmlFor="username"
-                  className="block text-sm font-medium text-red-100 mb-2"
+                  className="block text-sm font-medium text-base-content mb-2"
                 >
                   Username
                 </label>
@@ -144,7 +130,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                     }))
                   }
                   placeholder="Enter your username"
-                  className="input input-bordered w-full bg-white/10 border-white/20 text-white placeholder-red-200 focus:border-red-400 focus:ring-2 focus:ring-red-400/20 backdrop-blur-sm"
+                  className="input input-bordered w-full bg-base-100 border-base-300 text-base-content placeholder-base-content/40 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                   required
                 />
               </div>
@@ -153,7 +139,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               <div>
                 <label
                   htmlFor="password"
-                  className="block text-sm font-medium text-red-100 mb-2"
+                  className="block text-sm font-medium text-base-content mb-2"
                 >
                   Password
                 </label>
@@ -168,7 +154,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                     }))
                   }
                   placeholder="Enter your password"
-                  className="input input-bordered w-full bg-white/10 border-white/20 text-white placeholder-red-200 focus:border-red-400 focus:ring-2 focus:ring-red-400/20 backdrop-blur-sm"
+                  className="input input-bordered w-full bg-base-100 border-base-300 text-base-content placeholder-base-content/40 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                   required
                 />
               </div>
@@ -176,7 +162,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
             {/* Error message */}
             {error && (
-              <div className="alert alert-error bg-red-500/20 border-red-500/30 text-red-200">
+              <div className="alert alert-error">
                 <svg
                   className="w-5 h-5"
                   fill="none"
@@ -196,7 +182,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
             {/* Success message */}
             {serverInfo && (
-              <div className="alert alert-success bg-green-500/20 border-green-500/30 text-green-200">
+              <div className="alert alert-success">
                 <svg
                   className="w-5 h-5"
                   fill="none"
@@ -219,7 +205,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               type="button"
               onClick={testConnection}
               disabled={isLoading || !formData.serverUrl}
-              className="btn btn-outline w-full border-red-400/50 text-red-200 hover:bg-red-500/20 hover:border-red-400 disabled:opacity-50"
+              className="btn btn-outline w-full border-base-content/20 text-base-content/70 hover:bg-base-content/10 hover:border-base-content/30 disabled:opacity-50"
             >
               {isLoading ? (
                 <div className="flex items-center space-x-2">
@@ -228,19 +214,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 </div>
               ) : (
                 <div className="flex items-center space-x-2">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"
-                    />
-                  </svg>
+                  <IconWifi size={16} />
                   <span>Test Connection</span>
                 </div>
               )}
@@ -250,7 +224,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             <button
               type="submit"
               disabled={isLoading}
-              className="btn btn-primary w-full bg-gradient-to-r from-red-500 to-red-700 border-none text-white font-semibold py-3 rounded-xl hover:from-red-600 hover:to-red-800 focus:ring-4 focus:ring-red-500/30 transform transition-all duration-200 hover:scale-105 shadow-lg"
+              className="btn w-full bg-gradient-to-r from-red-500 to-red-700 border-none text-white font-semibold hover:from-red-600 hover:to-red-800 transform transition-all duration-200 hover:scale-105 shadow-lg"
             >
               {isLoading ? (
                 <div className="flex items-center space-x-2">
@@ -259,19 +233,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 </div>
               ) : (
                 <div className="flex items-center space-x-2">
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
-                    />
-                  </svg>
+                  <IconLogin size={16} />
                   <span>Connect to Server</span>
                 </div>
               )}
@@ -280,13 +242,13 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
           {/* Footer */}
           <div className="mt-6 text-center">
-            <p className="text-sm text-red-200">
+            <p className="text-sm text-base-content/60">
               Don't have a Jellyfin server?{" "}
               <a
                 href="https://jellyfin.org"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-red-300 hover:text-red-200 font-medium underline decoration-dotted"
+                className="text-red-500 hover:text-red-400 font-medium underline decoration-dotted"
               >
                 Learn more
               </a>

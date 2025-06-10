@@ -34,10 +34,10 @@ function AppContent() {
   // Show loading spinner while checking authentication
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-black via-red-950 to-black flex items-center justify-center">
+      <div className="min-h-screen bg-base-100 flex items-center justify-center">
         <div className="text-center">
           <div className="loading loading-spinner loading-lg text-red-500 mb-4"></div>
-          <p className="text-red-200">Loading...</p>
+          <p className="text-base-content/60">Loading...</p>
         </div>
       </div>
     );

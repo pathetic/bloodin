@@ -544,10 +544,10 @@ const FullscreenPlayer: React.FC<FullscreenPlayerProps> = ({
             }`}
           >
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-white/60 w-12 text-right font-mono">
+              <span className="text-sm text-white/60 w-12 text-right font-mono flex items-center justify-end">
                 {formatTime(isSeeking ? localSeekPosition : progress)}
               </span>
-              <div className="flex-1 relative group">
+              <div className="flex-1 relative group flex items-center">
                 <input
                   type="range"
                   min="0"
@@ -571,7 +571,7 @@ const FullscreenPlayer: React.FC<FullscreenPlayerProps> = ({
                   }}
                 />
               </div>
-              <span className="text-sm text-white/60 w-12 text-left font-mono">
+              <span className="text-sm text-white/60 w-12 text-left font-mono flex items-center justify-start">
                 {formatTime(duration)}
               </span>
             </div>

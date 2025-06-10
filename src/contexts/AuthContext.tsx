@@ -67,7 +67,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setIsAuthenticated(true);
         setUserName(result.user_name);
         setServerName(result.server_name);
-        // Note: ConnectResult doesn't include server_url, we'll get it from checkAuth
+
+        // Call checkAuth to get complete user info including server URL
+        try {
+          await checkAuth();
+        } catch (authError) {
+          console.error(
+            "Failed to get complete user info after login:",
+            authError
+          );
+          // Don't fail the login if checkAuth fails, we have basic info
+        }
       }
 
       return result;
@@ -85,6 +95,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const logout = async () => {
     setIsLoading(true);
     try {
+      // Stop audio playback before logout
+      try {
+        // Import AudioPlayerAPI to stop playback directly
+        const { AudioPlayerAPI } = await import("../services/audioPlayerApi");
+        await AudioPlayerAPI.stopPlayback();
+        console.log("🎵 Stopped audio playback on logout");
+      } catch (audioError) {
+        console.error("Failed to stop audio on logout:", audioError);
+        // Don't prevent logout if audio stop fails
+      }
+
       await JellyfinApiService.logout();
       setIsAuthenticated(false);
       setUserName(undefined);
