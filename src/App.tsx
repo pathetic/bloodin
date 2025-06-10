@@ -26,8 +26,8 @@ function AppContent() {
       document.documentElement.setAttribute("data-theme", savedTheme);
     } else {
       // Set default theme if none saved
-      document.documentElement.setAttribute("data-theme", "forest");
-      localStorage.setItem("theme", "forest");
+      document.documentElement.setAttribute("data-theme", "dark");
+      localStorage.setItem("theme", "dark");
     }
   }, []);
 
