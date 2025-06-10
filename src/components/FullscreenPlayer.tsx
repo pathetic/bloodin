@@ -45,6 +45,8 @@ interface Bubble {
   opacity: number;
   velocity: { x: number; y: number };
   color: string;
+  isVisible: boolean;
+  delay: number;
 }
 
 const FullscreenPlayer: React.FC<FullscreenPlayerProps> = ({
@@ -79,11 +81,21 @@ const FullscreenPlayer: React.FC<FullscreenPlayerProps> = ({
   });
   const [isMouseHidden, setIsMouseHidden] = useState(false);
   const [areControlsHidden, setAreControlsHidden] = useState(false);
+  const [showBubbles, setShowBubbles] = useState(false);
 
   const exitTimeoutRef = useRef<number | null>(null);
   const bubbleIdRef = useRef(0);
   const animationFrameRef = useRef<number>();
   const mouseHideTimeoutRef = useRef<number | null>(null);
+
+  // Wait 2 seconds before showing bubbles
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowBubbles(true);
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // Enter fullscreen mode when component mounts
   useEffect(() => {
@@ -205,6 +217,8 @@ const FullscreenPlayer: React.FC<FullscreenPlayerProps> = ({
 
   // Initialize bubbles
   useEffect(() => {
+    if (!showBubbles) return;
+
     const initialBubbles: Bubble[] = [];
     for (let i = 0; i < 20; i++) {
       initialBubbles.push({
@@ -220,13 +234,26 @@ const FullscreenPlayer: React.FC<FullscreenPlayerProps> = ({
         color: [albumColors.primary, albumColors.secondary, albumColors.accent][
           Math.floor(Math.random() * 3)
         ],
+        isVisible: false,
+        delay: i * 200 + Math.random() * 1000, // Stagger appearance over time
       });
     }
     setBubbles(initialBubbles);
-  }, [albumColors]);
+
+    // Make bubbles visible gradually
+    initialBubbles.forEach((bubble) => {
+      setTimeout(() => {
+        setBubbles((prev) =>
+          prev.map((b) => (b.id === bubble.id ? { ...b, isVisible: true } : b))
+        );
+      }, bubble.delay);
+    });
+  }, [albumColors, showBubbles]);
 
   // Animate bubbles
   useEffect(() => {
+    if (!showBubbles) return;
+
     const animateBubbles = () => {
       setBubbles((prev) =>
         prev.map((bubble) => {
@@ -267,7 +294,7 @@ const FullscreenPlayer: React.FC<FullscreenPlayerProps> = ({
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, []);
+  }, [showBubbles]);
 
   // Handle mouse movement for exit button with improved animation
   useEffect(() => {
@@ -457,20 +484,25 @@ const FullscreenPlayer: React.FC<FullscreenPlayerProps> = ({
     >
       {/* Animated Bubbles Background */}
       <div className="absolute inset-0 overflow-hidden">
-        {bubbles.map((bubble) => (
-          <div
-            key={bubble.id}
-            className="absolute rounded-full blur-sm animate-pulse"
-            style={{
-              left: `${bubble.x}px`,
-              top: `${bubble.y}px`,
-              width: `${bubble.size}px`,
-              height: `${bubble.size}px`,
-              backgroundColor: bubble.color,
-              opacity: bubble.opacity,
-            }}
-          />
-        ))}
+        {showBubbles &&
+          bubbles.map((bubble) => (
+            <div
+              key={bubble.id}
+              className={`absolute rounded-full blur-sm animate-pulse transition-all duration-2000 ease-out ${
+                bubble.isVisible
+                  ? "opacity-100 scale-100"
+                  : "opacity-0 scale-50"
+              }`}
+              style={{
+                left: `${bubble.x}px`,
+                top: `${bubble.y}px`,
+                width: `${bubble.size}px`,
+                height: `${bubble.size}px`,
+                backgroundColor: bubble.color,
+                opacity: bubble.isVisible ? bubble.opacity : 0,
+              }}
+            />
+          ))}
       </div>
 
       {/* Exit Button with smooth slide-down animation */}

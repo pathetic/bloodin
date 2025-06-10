@@ -9,9 +9,7 @@ import {
   IconMusic,
   IconDisc,
   IconPlaylist,
-  IconSettings,
   IconChevronsLeft,
-  IconPlayerPlay,
   IconLogout,
   IconChevronsRight,
   IconMinimize,
@@ -94,14 +92,6 @@ const Sidebar: React.FC<SidebarProps> = ({
       path: "/albums",
       label: "Albums",
       icon: <IconDisc size={20} />,
-    },
-  ];
-
-  const bottomNavItems = [
-    {
-      path: "/settings",
-      label: "Settings",
-      icon: <IconSettings size={20} />,
     },
   ];
 
@@ -280,43 +270,6 @@ const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Bottom section - fixed at bottom */}
         <div className="flex-shrink-0 space-y-4 mt-4">
-          {/* Bottom Navigation */}
-          <div className="space-y-2">
-            {bottomNavItems.map((item) => (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                className={({ isActive }) =>
-                  `flex items-center w-full cursor-pointer ${
-                    isCollapsed ? "justify-center px-2 py-3" : "px-3 py-2.5"
-                  } rounded-xl transition-all duration-200 group ${
-                    isActive
-                      ? "bg-gradient-to-r from-red-500 to-red-700 text-white shadow-lg"
-                      : "text-base-content/70 hover:text-white hover:bg-white/10"
-                  }`
-                }
-                title={isCollapsed ? item.label : undefined}
-              >
-                {({ isActive }) => (
-                  <>
-                    <span
-                      className={`${
-                        isActive
-                          ? "text-white"
-                          : "text-base-content/60 group-hover:text-white"
-                      }`}
-                    >
-                      {item.icon}
-                    </span>
-                    {!isCollapsed && (
-                      <span className="ml-3 font-medium">{item.label}</span>
-                    )}
-                  </>
-                )}
-              </NavLink>
-            ))}
-          </div>
-
           {/* Expanded Album Art - Below user info */}
           {isImageExpanded && !isCollapsed && currentSong && (
             <div className="w-full">

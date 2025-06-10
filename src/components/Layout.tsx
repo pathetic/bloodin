@@ -4,7 +4,6 @@ import Sidebar from "./Sidebar";
 import { PlayerBar } from "./PlayerBar";
 import FullscreenPlayer from "./FullscreenPlayer";
 import { useAudioPlayer } from "../contexts/AudioPlayerContext";
-import { getCurrentWindow } from "@tauri-apps/api/window";
 import { IconMusic, IconMinimize } from "@tabler/icons-react";
 import TitleBar from "./TitleBar";
 // import { IconSearch, IconMoon, IconBell } from "@tabler/icons-react";
@@ -272,9 +271,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <Sidebar
               isCollapsed={isCollapsed}
               onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
-              isImageExpanded={isImageExpanded && !isCollapsed}
+              isImageExpanded={isImageExpanded}
               onImageCollapse={() => setIsImageExpanded(false)}
-              currentSong={audioPlayer.state.currentSong}
+              currentSong={
+                audioPlayer.state.currentSong ||
+                audioPlayer.getLastPlayedSong()?.song
+              }
             />
 
             {/* Main content area */}
@@ -282,7 +284,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               {/* Floating Expanded Album Art - When sidebar is collapsed - INSIDE CONTENT AREA */}
               {isImageExpanded &&
                 isCollapsed &&
-                audioPlayer.state.currentSong && (
+                (audioPlayer.state.currentSong ||
+                  audioPlayer.getLastPlayedSong()?.song) && (
                   <div
                     id="floating-album-art"
                     className={`absolute ${getCornerPosition(
@@ -297,10 +300,23 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                       } transition-all duration-200`}
                       onMouseDown={handleMouseDown}
                     >
-                      {audioPlayer.state.currentSong.albumArt ? (
+                      {(
+                        audioPlayer.state.currentSong ||
+                        audioPlayer.getLastPlayedSong()?.song
+                      )?.albumArt ? (
                         <img
-                          src={audioPlayer.state.currentSong.albumArt}
-                          alt={audioPlayer.state.currentSong.album}
+                          src={
+                            (
+                              audioPlayer.state.currentSong ||
+                              audioPlayer.getLastPlayedSong()?.song
+                            )?.albumArt
+                          }
+                          alt={
+                            (
+                              audioPlayer.state.currentSong ||
+                              audioPlayer.getLastPlayedSong()?.song
+                            )?.album
+                          }
                           className="w-full h-full object-cover"
                         />
                       ) : (
@@ -311,14 +327,32 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                       {/* Overlay with song info */}
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3">
                         <h3 className="text-white font-medium text-base truncate">
-                          {audioPlayer.state.currentSong.title}
+                          {
+                            (
+                              audioPlayer.state.currentSong ||
+                              audioPlayer.getLastPlayedSong()?.song
+                            )?.title
+                          }
                         </h3>
                         <p className="text-gray-200 text-sm truncate">
-                          {audioPlayer.state.currentSong.artist}
+                          {
+                            (
+                              audioPlayer.state.currentSong ||
+                              audioPlayer.getLastPlayedSong()?.song
+                            )?.artist
+                          }
                         </p>
-                        {audioPlayer.state.currentSong.album && (
+                        {(
+                          audioPlayer.state.currentSong ||
+                          audioPlayer.getLastPlayedSong()?.song
+                        )?.album && (
                           <p className="text-gray-300 text-xs truncate">
-                            {audioPlayer.state.currentSong.album}
+                            {
+                              (
+                                audioPlayer.state.currentSong ||
+                                audioPlayer.getLastPlayedSong()?.song
+                              )?.album
+                            }
                           </p>
                         )}
                       </div>
