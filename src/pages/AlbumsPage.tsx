@@ -160,7 +160,7 @@ export default function AlbumsPage() {
         <div className="max-w-full mx-auto">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-white">Albums</h1>
+              <h1 className="text-3xl font-bold text-base-content">Albums</h1>
               <p className="text-gray-400 mt-1">
                 {isSearchMode
                   ? `${displayItems.length} album${
@@ -178,7 +178,7 @@ export default function AlbumsPage() {
                 placeholder="Search albums..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2 pr-10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                className="w-full bg-white/10 border border-base-content/40 rounded-xl px-4 py-2 pr-10 text-base-content placeholder-base-content/60 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
               />
               <button
                 type="submit"

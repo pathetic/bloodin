@@ -188,10 +188,12 @@ export default function HomePage() {
         <div className="flex items-center justify-between">
           {/* Welcome Text */}
           <div className="space-y-2">
-            <h1 className="text-3xl font-bold text-white">
+            <h1 className="text-3xl font-bold text-base-content">
               Welcome back, {userName || "Music Lover"}! 🎵
             </h1>
-            <p className="text-gray-400">Your music library is ready to play</p>
+            <p className="text-base-content/60">
+              Your music library is ready to play
+            </p>
           </div>
 
           {/* Statistics */}
@@ -201,7 +203,9 @@ export default function HomePage() {
                 <IconMusic size={20} className="text-red-500" />
               </div>
               <div>
-                <p className="text-sm text-gray-400">Total Songs</p>
+                <p className="text-sm font-bold text-base-content/70">
+                  Total Songs
+                </p>
                 <p className="text-lg font-semibold text-white">
                   {isLoading ? "..." : totalSongs.toLocaleString()}
                 </p>
@@ -213,7 +217,9 @@ export default function HomePage() {
                 <IconDisc size={20} className="text-orange-500" />
               </div>
               <div>
-                <p className="text-sm text-gray-400">Total Albums</p>
+                <p className="text-sm font-bold text-base-content/70">
+                  Total Albums
+                </p>
                 <p className="text-lg font-semibold text-white">
                   {isLoading ? "..." : totalAlbums.toLocaleString()}
                 </p>
@@ -229,7 +235,9 @@ export default function HomePage() {
         {recentSongs.length > 0 && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-white">Explore Songs</h2>
+              <h2 className="text-2xl font-bold text-base-content">
+                Explore Songs
+              </h2>
               <button
                 onClick={refreshExploreSongs}
                 disabled={isRefreshingExplore}
@@ -264,8 +272,10 @@ export default function HomePage() {
         {/* Recently Played */}
         {recentlyPlayedSongs.length > 0 && (
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-white">Recently Played</h2>
-            <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 max-h-80 overflow-y-auto">
+            <h2 className="text-2xl font-bold text-base-content">
+              Recently Played
+            </h2>
+            <div className="bg-base-content/10 backdrop-blur-sm rounded-xl p-4 max-h-80 overflow-y-auto">
               <div className="space-y-2">
                 {recentlyPlayedSongs.slice(0, 20).map((song, index) => (
                   <SongRow
@@ -284,7 +294,7 @@ export default function HomePage() {
         {/* Recent Albums */}
         {recentAlbums.length > 0 && (
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-white">
+            <h2 className="text-2xl font-bold text-base-content">
               Recently Added Albums
             </h2>
             {isLoading ? (

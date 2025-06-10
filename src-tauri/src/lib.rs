@@ -49,7 +49,8 @@ pub fn run() {
             commands::set_repeat_mode,
             commands::get_playback_state,
             commands::next_track,
-            commands::previous_track
+            commands::previous_track,
+            commands::open_link,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

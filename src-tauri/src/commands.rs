@@ -2,6 +2,7 @@ use crate::audio_player::{AudioPlayer, PlaybackState, QueueItem, RepeatMode};
 use crate::jellyfin::{JellyfinClient, ServerInfo, UserProfile, MusicItem};
 use crate::storage;
 use crate::audio_cache::AudioCache;
+use std::os::windows::process::CommandExt;
 use std::sync::{Arc, Mutex};
 use tokio::sync::Mutex as TokioMutex;
 use tauri::State;
@@ -1015,3 +1016,52 @@ pub async fn get_item(
         }),
     }
 } 
+
+use std::process::Command;
+
+#[tauri::command]
+pub async fn open_link(url: String) -> Result<(), String> {
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+
+        const DETACH: u32 = 0x00000008;
+        const HIDE: u32 = 0x08000000;
+
+        Command::new("cmd")
+            .args(["/C", "start", &url])
+            .creation_flags(HIDE | DETACH)
+            .spawn()
+            .map_err(|e| format!("Failed to open link on Windows: {}", e))?;
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        Command::new("open")
+            .arg(&url)
+            .spawn()
+            .map_err(|e| format!("Failed to open link on macOS: {}", e))?;
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        // On Linux, `xdg-open` is a common way to open URLs using the default browser.
+        // It's part of xdg-utils, which is usually pre-installed on most desktop Linux distributions.
+        Command::new("xdg-open")
+            .arg(&url)
+            .spawn()
+            .map_err(|e| format!("Failed to open link on Linux: {}", e))?;
+    }
+
+    // Fallback for other operating systems or if none of the specific targets match.
+    // This part might need more refinement depending on your target platforms.
+    #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
+    {
+        eprintln!("Warning: open_link not explicitly supported on this OS.");
+        // You might want to return an error or try a very generic command
+        // that might not work everywhere.
+        return Err("Unsupported operating system for opening links.".to_string());
+    }
+
+    Ok(())
+}

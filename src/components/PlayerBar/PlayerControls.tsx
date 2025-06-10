@@ -54,7 +54,7 @@ const PlayerControls: React.FC<PlayerControlsProps> = ({
         className={`p-2 rounded-xl transition-all duration-200 cursor-pointer ${
           isShuffled
             ? "bg-red-500 text-white shadow-lg"
-            : "text-gray-400 hover:text-white hover:bg-white/10"
+            : "text-base-content/60 hover:text-white hover:bg-white/10"
         }`}
       >
         <IconArrowsShuffle size={20} />
@@ -62,7 +62,7 @@ const PlayerControls: React.FC<PlayerControlsProps> = ({
 
       <button
         onClick={handlePreviousClick}
-        className="p-3 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+        className="p-3 rounded-xl text-base-content/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
       >
         <IconPlayerTrackPrev size={24} />
       </button>
@@ -84,7 +84,7 @@ const PlayerControls: React.FC<PlayerControlsProps> = ({
 
       <button
         onClick={onNext}
-        className="p-3 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+        className="p-3 rounded-xl text-base-content/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
       >
         <IconPlayerTrackNext size={24} />
       </button>
@@ -94,7 +94,7 @@ const PlayerControls: React.FC<PlayerControlsProps> = ({
         className={`p-2 rounded-xl transition-all duration-200 cursor-pointer ${
           repeatMode !== "none"
             ? "bg-red-500 text-white shadow-lg"
-            : "text-gray-400 hover:text-white hover:bg-white/10"
+            : "text-base-content/60 hover:text-white hover:bg-white/10"
         }`}
       >
         {repeatMode === "one" ? (

@@ -171,7 +171,7 @@ const PlayerBar: React.FC<PlayerBarProps> = ({
   if (!displaySong) {
     return (
       <div className="h-20 backdrop-blur-xl bg-black/30 border-t border-white/10 flex items-center justify-center">
-        <p className="text-gray-400 text-sm">No song selected</p>
+        <p className="text-base-content/60 text-sm">No song selected</p>
       </div>
     );
   }

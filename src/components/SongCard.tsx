@@ -70,7 +70,7 @@ export default function SongCard({
       <div className="space-y-1">
         <h4
           className={`font-medium truncate ${
-            isCurrentSong ? "text-red-300" : "text-white"
+            isCurrentSong ? "text-red-500" : "text-base-content"
           }`}
         >
           {song.Name}

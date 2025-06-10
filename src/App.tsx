@@ -4,6 +4,7 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
+import { useEffect } from "react";
 import LoginPage from "./pages/LoginPage";
 import HomePage from "./pages/HomePage";
 import SongsPage from "./pages/SongsPage";
@@ -17,6 +18,18 @@ import { AudioPlayerProvider } from "./contexts/AudioPlayerContext";
 
 function AppContent() {
   const { isAuthenticated, isLoading } = useAuth();
+
+  // Load saved theme on app startup
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) {
+      document.documentElement.setAttribute("data-theme", savedTheme);
+    } else {
+      // Set default theme if none saved
+      document.documentElement.setAttribute("data-theme", "forest");
+      localStorage.setItem("theme", "forest");
+    }
+  }, []);
 
   // Show loading spinner while checking authentication
   if (isLoading) {

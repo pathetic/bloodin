@@ -37,7 +37,7 @@ export default function ArtistLinks({
         <React.Fragment key={artist.Id}>
           <a
             onClick={(e) => handleArtistClick(e, artist.Id, artist.Name)}
-            className="hover:text-red-400 hover:underline cursor-pointer transition-colors"
+            className="hover:text-red-500 hover:underline cursor-pointer transition-colors"
           >
             {artist.Name}
           </a>

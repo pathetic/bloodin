@@ -30,7 +30,7 @@ const ClickableArtists: React.FC<ClickableArtistsProps> = ({
       {artistNames.map((artistName, index) => (
         <React.Fragment key={artistIds[index]}>
           <span
-            className="hover:text-red-400 cursor-pointer"
+            className="hover:text-red-500 cursor-pointer"
             onClick={(e) => {
               e.stopPropagation();
               onArtistClick(artistIds[index], artistName.trim());

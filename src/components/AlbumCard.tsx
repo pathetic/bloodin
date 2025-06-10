@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { IconPlayerPlay } from "@tabler/icons-react";
+import { IconExternalLink } from "@tabler/icons-react";
 import { JellyfinApiService } from "../services/jellyfinApi";
 import ImagePlaceholder from "./ImagePlaceholder";
 import ArtistLinks from "./ArtistLinks";
@@ -53,7 +53,7 @@ export default function AlbumCard({
           <ImagePlaceholder type="album" size="large" />
         )}
         <div className="absolute inset-0 bg-black/40 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-          <IconPlayerPlay size={24} className="text-white" />
+          <IconExternalLink size={24} className="text-white" />
         </div>
 
         {/* Album track count overlay */}
@@ -65,7 +65,7 @@ export default function AlbumCard({
       </div>
 
       <div className="space-y-1">
-        <h3 className="font-medium text-white truncate group-hover:text-red-300 transition-colors">
+        <h3 className="font-medium text-base-content truncate transition-colors">
           {album.Name}
         </h3>
         <ArtistLinks

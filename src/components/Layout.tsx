@@ -209,6 +209,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           console.log("🎵 Spacebar triggered play/pause");
         }
       }
+
+      if (e.key.toLowerCase() === "f") {
+        handleFullscreen();
+      }
     };
 
     // Add the event listener

@@ -75,7 +75,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
 
   return (
     <div className="w-full max-w-lg flex items-center space-x-3 mb-[0.5rem]">
-      <span className="text-xs text-gray-400 w-10 text-right">
+      <span className="text-xs text-base-content/60 w-10 text-right">
         {formatTime(isSeeking ? localSeekPosition : progress)}
       </span>
       <div className="flex-1 relative flex items-center">
@@ -103,7 +103,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
           }}
         />
       </div>
-      <span className="text-xs text-gray-400 w-10 text-left">
+      <span className="text-xs text-base-content/60 w-10 text-left">
         {formatTime(duration)}
       </span>
     </div>

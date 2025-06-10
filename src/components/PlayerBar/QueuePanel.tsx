@@ -40,23 +40,23 @@ const QueuePanel: React.FC<QueuePanelProps> = ({
     <div className="fixed bottom-24 right-6 z-50">
       <div
         ref={queueRef}
-        className="backdrop-blur-xl bg-black/30 border border-white/10 rounded-xl shadow-2xl w-96 max-h-96 overflow-hidden flex flex-col"
+        className="backdrop-blur-xl bg-base-100/30 border border-white/10 rounded-xl shadow-2xl w-96 max-h-96 overflow-hidden flex flex-col"
       >
         {/* Static Header */}
-        <div className="flex items-center justify-between border-b border-white/10 p-3 bg-black/20 backdrop-blur-sm">
+        <div className="flex items-center justify-between border-b border-white/10 p-3 bg-base-100/20 backdrop-blur-sm">
           <div className="flex items-center gap-2">
-            <h3 className="text-white font-medium flex items-center gap-2 text-sm">
+            <h3 className="text-base-content font-medium flex items-center gap-2 text-sm">
               <IconPlaylist size={14} />
               Queue
             </h3>
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-base-content/80">
               {stats.current}/{stats.total}
               {stats.manual > 0 && ` (+${stats.manual} manual)`}
             </span>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded hover:bg-white/10 text-gray-400 hover:text-white transition-colors text-xs"
+            className="p-1 rounded hover:bg-white/10 text-base-content/60 hover:text-white transition-colors text-xs"
           >
             ✕
           </button>
@@ -64,10 +64,10 @@ const QueuePanel: React.FC<QueuePanelProps> = ({
 
         {/* Queue Source Info */}
         {stats.source.type !== "none" && (
-          <div className="px-3 py-2 bg-black/10 border-b border-white/5">
-            <p className="text-xs text-gray-400">
+          <div className="px-3 py-2 bg-base-100/10 border-b border-white/5">
+            <p className="text-xs text-base-content/60">
               Playing from{" "}
-              <span className="text-gray-300 font-medium">
+              <span className="text-base-content/30 font-medium">
                 {stats.source.name || `${stats.source.type} ${stats.source.id}`}
               </span>
             </p>
@@ -77,7 +77,7 @@ const QueuePanel: React.FC<QueuePanelProps> = ({
         {/* Scrollable Queue List */}
         <div className="flex-1 overflow-y-auto">
           {queue.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-32 text-gray-400">
+            <div className="flex flex-col items-center justify-center h-32 text-base-content/50">
               <IconPlaylist size={32} className="mb-2 opacity-50" />
               <p className="text-sm">No songs in queue</p>
             </div>
@@ -156,7 +156,7 @@ const QueuePanel: React.FC<QueuePanelProps> = ({
                       className={`transition-all duration-200 ${
                         draggedItem === queueItem.song.id
                           ? "text-green-400"
-                          : "text-gray-400 group-hover:text-gray-300"
+                          : "text-base-content/60 group-hover:text-base-content/50"
                       } ${
                         queueItem.status !== "playing"
                           ? "group-hover:drop-shadow-lg"
@@ -184,13 +184,13 @@ const QueuePanel: React.FC<QueuePanelProps> = ({
                     <h4
                       className={`font-medium truncate text-xs ${
                         queueItem.status === "playing"
-                          ? "text-red-300"
-                          : "text-white"
+                          ? "text-red-500"
+                          : "text-base-content"
                       }`}
                     >
                       {queueItem.song.title}
                     </h4>
-                    <p className="text-xs text-gray-400 truncate">
+                    <p className="text-xs text-base-content/60 truncate">
                       <ClickableArtists
                         artistString={queueItem.song.artist}
                         artistIds={queueItem.song.artistIds}
@@ -231,7 +231,7 @@ const QueuePanel: React.FC<QueuePanelProps> = ({
                             );
                           }
                         }}
-                        className="p-1 rounded hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition-all duration-200 opacity-70 hover:opacity-100 group-hover:opacity-100"
+                        className="p-1 rounded hover:bg-red-500/20 text-base-content/60 hover:text-red-400 transition-all duration-200 opacity-70 hover:opacity-100 group-hover:opacity-100"
                         title={`Remove "${queueItem.song.title}" from queue`}
                       >
                         <IconX size={12} />
@@ -243,7 +243,7 @@ const QueuePanel: React.FC<QueuePanelProps> = ({
 
               {queue.length > 50 && (
                 <div className="p-2 text-center">
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-base-content/50">
                     ... and {queue.length - 50} more songs
                   </p>
                 </div>
@@ -253,19 +253,19 @@ const QueuePanel: React.FC<QueuePanelProps> = ({
         </div>
 
         {/* Queue Actions */}
-        <div className="border-t border-white/10 p-3 bg-black/10">
+        <div className="border-t border-white/10 p-3 bg-base-100/10">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => {
                   audioPlayerContext.clearQueue();
                 }}
-                className="text-xs px-2 py-1 rounded bg-red-500/20 text-red-300 hover:bg-red-500/30 transition-colors"
+                className="cursor-pointer text-xs px-2 py-1 rounded bg-red-500/20 text-white hover:bg-red-500/30 transition-colors"
               >
                 Clear All
               </button>
             </div>
-            <div className="text-xs text-gray-400">
+            <div className="text-xs text-base-content/60">
               Click to play • Drag to reorder • X to remove
             </div>
           </div>

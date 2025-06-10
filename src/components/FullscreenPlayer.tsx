@@ -88,12 +88,38 @@ const FullscreenPlayer: React.FC<FullscreenPlayerProps> = ({
   // Enter fullscreen mode when component mounts
   useEffect(() => {
     const enterFullscreen = async () => {
-      try {
-        const window = getCurrentWindow();
-        await window.setFullscreen(true);
-        console.log("🚀 Entered native fullscreen mode");
-      } catch (error) {
-        console.error("Failed to enter fullscreen:", error);
+      let retries = 0;
+      const maxRetries = 5;
+
+      while (retries < maxRetries) {
+        try {
+          const window = getCurrentWindow();
+
+          // Check if window is valid
+          if (!window) {
+            throw new Error("Invalid window object");
+          }
+
+          await window.setFullscreen(true);
+          console.log("🚀 Entered native fullscreen mode");
+          return; // Success, exit the retry loop
+        } catch (error) {
+          retries++;
+          console.warn(
+            `Failed to enter fullscreen (attempt ${retries}/${maxRetries}):`,
+            error
+          );
+
+          if (retries < maxRetries) {
+            // Wait before retrying (exponential backoff)
+            await new Promise((resolve) => setTimeout(resolve, 100 * retries));
+          } else {
+            console.error(
+              "Failed to enter fullscreen after all retries:",
+              error
+            );
+          }
+        }
       }
     };
 
@@ -102,12 +128,40 @@ const FullscreenPlayer: React.FC<FullscreenPlayerProps> = ({
     // Exit fullscreen when component unmounts
     return () => {
       const exitFullscreen = async () => {
-        try {
-          const window = getCurrentWindow();
-          await window.setFullscreen(false);
-          console.log("🚀 Exited native fullscreen mode");
-        } catch (error) {
-          console.error("Failed to exit fullscreen:", error);
+        let retries = 0;
+        const maxRetries = 5;
+
+        while (retries < maxRetries) {
+          try {
+            const window = getCurrentWindow();
+
+            // Check if window is valid
+            if (!window) {
+              throw new Error("Invalid window object");
+            }
+
+            await window.setFullscreen(false);
+            console.log("🚀 Exited native fullscreen mode");
+            return; // Success, exit the retry loop
+          } catch (error) {
+            retries++;
+            console.warn(
+              `Failed to exit fullscreen (attempt ${retries}/${maxRetries}):`,
+              error
+            );
+
+            if (retries < maxRetries) {
+              // Wait before retrying (exponential backoff)
+              await new Promise((resolve) =>
+                setTimeout(resolve, 100 * retries)
+              );
+            } else {
+              console.error(
+                "Failed to exit fullscreen after all retries:",
+                error
+              );
+            }
+          }
         }
       };
 
@@ -276,27 +330,62 @@ const FullscreenPlayer: React.FC<FullscreenPlayerProps> = ({
     };
   }, [showExitButton]);
 
-  // Handle ESC key and exit
+  // Handle ESC key, F key, and exit
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+      if (e.key === "Escape" || e.key.toLowerCase() === "f") {
         handleExit();
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    // Add a small delay before listening to prevent catching the same 'f' press that entered fullscreen
+    const timeoutId = setTimeout(() => {
+      window.addEventListener("keydown", handleKeyDown);
+    }, 100);
+
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, []);
 
   const handleExit = async () => {
-    try {
-      const window = getCurrentWindow();
-      await window.setFullscreen(false);
-      onExit();
-    } catch (error) {
-      console.error("Failed to exit fullscreen:", error);
-      onExit(); // Fallback
+    let retries = 0;
+    const maxRetries = 5;
+
+    while (retries < maxRetries) {
+      try {
+        const window = getCurrentWindow();
+
+        // Check if window is valid
+        if (!window) {
+          throw new Error("Invalid window object");
+        }
+
+        await window.setFullscreen(false);
+        onExit();
+        return; // Success, exit the retry loop
+      } catch (error) {
+        retries++;
+        console.warn(
+          `Failed to exit fullscreen (attempt ${retries}/${maxRetries}):`,
+          error
+        );
+
+        if (retries < maxRetries) {
+          // Wait before retrying (exponential backoff)
+          await new Promise((resolve) => setTimeout(resolve, 100 * retries));
+        } else {
+          console.error("Failed to exit fullscreen after all retries:", error);
+          onExit(); // Fallback - exit anyway
+        }
+      }
     }
+  };
+
+  // Handle double-click to exit
+  const handleDoubleClick = () => {
+    handleExit();
   };
 
   const formatTime = (seconds: number) => {
@@ -334,6 +423,29 @@ const FullscreenPlayer: React.FC<FullscreenPlayerProps> = ({
     }
   };
 
+  // Handle volume wheel scrolling
+  const handleVolumeWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    e.preventDefault(); // Prevent page scrolling
+
+    // Determine scroll direction and adjust volume
+    const delta = e.deltaY;
+    const volumeStep = 0.05; // 5% volume steps
+
+    let newVolume: number;
+    if (delta < 0) {
+      // Scrolling up - increase volume
+      newVolume = Math.min(1, volume + volumeStep);
+    } else {
+      // Scrolling down - decrease volume
+      newVolume = Math.max(0, volume - volumeStep);
+    }
+
+    // Round to avoid floating point precision issues
+    newVolume = Math.round(newVolume * 100) / 100;
+
+    onVolumeChange(newVolume);
+  };
+
   if (!currentSong) return null;
 
   return (
@@ -341,6 +453,7 @@ const FullscreenPlayer: React.FC<FullscreenPlayerProps> = ({
       className={`fixed inset-0 z-50 bg-black overflow-hidden ${
         isMouseHidden ? "cursor-none" : ""
       }`}
+      onDoubleClick={handleDoubleClick}
     >
       {/* Animated Bubbles Background */}
       <div className="absolute inset-0 overflow-hidden">
@@ -372,7 +485,7 @@ const FullscreenPlayer: React.FC<FullscreenPlayerProps> = ({
           <button
             onClick={handleExit}
             className="p-3 rounded-full bg-black/60 hover:bg-red-600/80 text-white backdrop-blur-sm transition-all duration-300 hover:scale-110 shadow-lg"
-            title="Exit fullscreen (ESC)"
+            title="Exit fullscreen (ESC or F)"
           >
             <IconX size={24} />
           </button>
@@ -380,64 +493,61 @@ const FullscreenPlayer: React.FC<FullscreenPlayerProps> = ({
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 h-full flex flex-col">
-        {/* Center - Album Info */}
-        <div className="flex-1 flex items-center justify-center px-8">
-          <div className="text-center max-w-2xl">
-            {/* Album Art */}
-            <div className="relative mx-auto mb-8 w-80 h-80 rounded-2xl overflow-hidden shadow-2xl">
-              {currentSong.albumArt ? (
-                <img
-                  src={currentSong.albumArt}
-                  alt={currentSong.album}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div
-                  className="w-full h-full flex items-center justify-center"
-                  style={{
-                    background: `linear-gradient(135deg, ${albumColors.primary}, ${albumColors.secondary})`,
-                  }}
-                >
-                  <IconMusic size={120} className="text-white/80" />
-                </div>
-              )}
-            </div>
-
-            {/* Song Info */}
-            <div
-              className={`transition-opacity duration-500 ${
-                areControlsHidden ? "opacity-30" : "opacity-100"
-              }`}
-            >
-              <h1 className="text-5xl font-bold text-white mb-4 drop-shadow-lg">
-                {currentSong.title}
-              </h1>
-              <p className="text-2xl text-gray-300 mb-2">
-                {currentSong.artist}
-              </p>
-              <p className="text-xl text-gray-400">{currentSong.album}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom - Controls */}
-        <div className="p-8">
-          <div className="max-w-4xl mx-auto">
-            {/* Progress Bar - Always visible */}
-            <div className="flex items-center space-x-4 mb-8">
-              <span
-                className={`text-sm text-gray-400 w-12 text-right transition-opacity duration-500 ${
-                  areControlsHidden ? "opacity-20" : "opacity-100"
-                }`}
+      <div className="relative z-10 h-full flex flex-col justify-center items-center">
+        {/* Center - Album Info and Controls */}
+        <div
+          className={`flex flex-col items-center max-w-4xl w-full px-8 transition-all duration-700 ${
+            areControlsHidden ? "translate-y-12" : "translate-y-0"
+          }`}
+        >
+          {/* Album Art */}
+          <div
+            className={`relative w-72 h-72 rounded-3xl overflow-hidden shadow-2xl transition-all duration-700 ${
+              areControlsHidden ? "mb-8" : "mb-12"
+            }`}
+          >
+            {currentSong.albumArt ? (
+              <img
+                src={currentSong.albumArt}
+                alt={currentSong.album}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div
+                className="w-full h-full flex items-center justify-center"
+                style={{
+                  background: `linear-gradient(135deg, ${albumColors.primary}, ${albumColors.secondary})`,
+                }}
               >
+                <IconMusic size={100} className="text-white/80" />
+              </div>
+            )}
+          </div>
+
+          {/* Song Info */}
+          <div
+            className={`text-center transition-all duration-700 ${
+              areControlsHidden ? "opacity-20 mb-8" : "opacity-100 mb-16"
+            }`}
+          >
+            <h1 className="text-4xl font-bold text-white mb-3 drop-shadow-lg max-w-2xl">
+              {currentSong.title}
+            </h1>
+            <p className="text-xl text-white/80 mb-2">{currentSong.artist}</p>
+            <p className="text-lg text-white/60">{currentSong.album}</p>
+          </div>
+
+          {/* Progress Bar */}
+          <div
+            className={`w-full max-w-2xl transition-all duration-700 ${
+              areControlsHidden ? "opacity-20" : "opacity-100 mb-12"
+            }`}
+          >
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-white/60 w-12 text-right font-mono">
                 {formatTime(isSeeking ? localSeekPosition : progress)}
               </span>
-              <div
-                className={`flex-1 relative transition-opacity duration-500 ${
-                  areControlsHidden ? "opacity-20" : "opacity-100"
-                }`}
-              >
+              <div className="flex-1 relative group">
                 <input
                   type="range"
                   min="0"
@@ -447,131 +557,139 @@ const FullscreenPlayer: React.FC<FullscreenPlayerProps> = ({
                   onMouseUp={handleProgressMouseUp}
                   onMouseEnter={() => setIsProgressHovered(true)}
                   onMouseLeave={() => setIsProgressHovered(false)}
-                  className="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer"
+                  className="w-full h-2 bg-white/20 rounded-full appearance-none cursor-pointer transition-all hover:h-3"
                   style={{
-                    background: `linear-gradient(to right, #ffffff 0%, #ffffff ${
+                    background: `linear-gradient(to right, ${
+                      albumColors.primary
+                    } 0%, ${albumColors.primary} ${
                       ((isSeeking ? localSeekPosition : progress) / duration) *
                       100
-                    }%, #4b5563 ${
+                    }%, rgba(255,255,255,0.2) ${
                       ((isSeeking ? localSeekPosition : progress) / duration) *
                       100
-                    }%, #4b5563 100%)`,
+                    }%, rgba(255,255,255,0.2) 100%)`,
                   }}
                 />
               </div>
-              <span
-                className={`text-sm text-gray-400 w-12 text-left transition-opacity duration-500 ${
-                  areControlsHidden ? "opacity-20" : "opacity-100"
-                }`}
-              >
+              <span className="text-sm text-white/60 w-12 text-left font-mono">
                 {formatTime(duration)}
               </span>
             </div>
+          </div>
 
-            {/* Control Buttons - Hidden when controls are hidden */}
-            <div
-              className={`transition-all duration-500 ${
-                areControlsHidden
-                  ? "opacity-0 translate-y-4 pointer-events-none"
-                  : "opacity-100 translate-y-0"
-              }`}
-            >
-              <div className="flex items-center justify-center space-x-8 mb-6">
-                <button
-                  onClick={onShuffle}
-                  className={`p-3 rounded-xl transition-all duration-200 ${
-                    isShuffled
-                      ? "text-white shadow-lg"
-                      : "text-gray-400 hover:text-white hover:bg-white/10"
-                  }`}
+          {/* Main Controls */}
+          <div
+            className={`transition-all duration-500 ${
+              areControlsHidden
+                ? "opacity-0 translate-y-8 pointer-events-none"
+                : "opacity-100 translate-y-0"
+            }`}
+          >
+            {/* Primary Control Buttons */}
+            <div className="flex items-center justify-center space-x-8 mb-8">
+              <button
+                onClick={onShuffle}
+                className={`p-4 rounded-full transition-all duration-300 hover:scale-110 ${
+                  isShuffled
+                    ? "text-white shadow-xl scale-105"
+                    : "text-white/60 hover:text-white hover:bg-white/10"
+                }`}
+                style={{
+                  backgroundColor: isShuffled
+                    ? albumColors.primary
+                    : "transparent",
+                }}
+              >
+                <IconArrowsShuffle size={24} />
+              </button>
+
+              <button
+                onClick={onPrevious}
+                className="p-4 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-all duration-300 hover:scale-110"
+              >
+                <IconPlayerTrackPrev size={28} />
+              </button>
+
+              <button
+                onClick={onPlayPause}
+                className="w-20 h-20 rounded-full bg-white flex items-center justify-center hover:scale-105 transition-all duration-300 shadow-2xl text-black"
+              >
+                {isPlaying ? (
+                  <IconPlayerPause size={36} />
+                ) : (
+                  <IconPlayerPlay size={36} className="ml-1" />
+                )}
+              </button>
+
+              <button
+                onClick={onNext}
+                className="p-4 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-all duration-300 hover:scale-110"
+              >
+                <IconPlayerTrackNext size={28} />
+              </button>
+
+              <button
+                onClick={onRepeat}
+                className={`p-4 rounded-full transition-all duration-300 hover:scale-110 ${
+                  repeatMode !== "none"
+                    ? "text-white shadow-xl scale-105"
+                    : "text-white/60 hover:text-white hover:bg-white/10"
+                }`}
+                style={{
+                  backgroundColor:
+                    repeatMode !== "none" ? albumColors.primary : "transparent",
+                }}
+              >
+                {repeatMode === "one" ? (
+                  <IconRepeatOnce size={24} />
+                ) : (
+                  <IconRepeat size={24} />
+                )}
+              </button>
+            </div>
+
+            {/* Volume Control */}
+            <div className="flex items-center justify-center space-x-4">
+              <button
+                onClick={handleMuteToggle}
+                className="p-3 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-all duration-300"
+              >
+                {volume === 0 ? (
+                  <IconVolumeOff size={20} />
+                ) : volume < 0.5 ? (
+                  <IconVolume2 size={20} />
+                ) : (
+                  <IconVolume size={20} />
+                )}
+              </button>
+
+              <div
+                className="w-40 relative group flex items-center"
+                onWheel={handleVolumeWheel}
+              >
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value={volume}
+                  onChange={handleVolumeChange}
+                  className="w-full h-1.5 bg-white/20 rounded-full appearance-none cursor-pointer transition-all hover:h-2"
                   style={{
-                    backgroundColor: isShuffled
-                      ? albumColors.primary
-                      : "transparent",
+                    background: `linear-gradient(to right, ${
+                      albumColors.accent
+                    } 0%, ${albumColors.accent} ${
+                      volume * 100
+                    }%, rgba(255,255,255,0.2) ${
+                      volume * 100
+                    }%, rgba(255,255,255,0.2) 100%)`,
                   }}
-                >
-                  <IconArrowsShuffle size={24} />
-                </button>
-
-                <button
-                  onClick={onPrevious}
-                  className="p-4 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
-                >
-                  <IconPlayerTrackPrev size={32} />
-                </button>
-
-                <button
-                  onClick={onPlayPause}
-                  className="w-16 h-16 rounded-full bg-white flex items-center justify-center hover:scale-105 transition-all duration-200 shadow-lg text-black"
-                >
-                  {isPlaying ? (
-                    <IconPlayerPause size={32} />
-                  ) : (
-                    <IconPlayerPlay size={32} className="ml-1" />
-                  )}
-                </button>
-
-                <button
-                  onClick={onNext}
-                  className="p-4 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
-                >
-                  <IconPlayerTrackNext size={32} />
-                </button>
-
-                <button
-                  onClick={onRepeat}
-                  className={`p-3 rounded-xl transition-all duration-200 ${
-                    repeatMode !== "none"
-                      ? "text-white shadow-lg"
-                      : "text-gray-400 hover:text-white hover:bg-white/10"
-                  }`}
-                  style={{
-                    backgroundColor:
-                      repeatMode !== "none"
-                        ? albumColors.primary
-                        : "transparent",
-                  }}
-                >
-                  {repeatMode === "one" ? (
-                    <IconRepeatOnce size={24} />
-                  ) : (
-                    <IconRepeat size={24} />
-                  )}
-                </button>
+                />
               </div>
 
-              {/* Volume Control - Hidden when controls are hidden */}
-              <div className="flex items-center justify-center space-x-4">
-                <button
-                  onClick={handleMuteToggle}
-                  className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
-                >
-                  {volume === 0 ? (
-                    <IconVolumeOff size={20} />
-                  ) : volume < 0.5 ? (
-                    <IconVolume2 size={20} />
-                  ) : (
-                    <IconVolume size={20} />
-                  )}
-                </button>
-
-                <div className="w-32 flex items-center">
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.01"
-                    value={volume}
-                    onChange={handleVolumeChange}
-                    className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer"
-                    style={{
-                      background: `linear-gradient(to right, #ffffff 0%, #ffffff ${
-                        volume * 100
-                      }%, #4b5563 ${volume * 100}%, #4b5563 100%)`,
-                    }}
-                  />
-                </div>
-              </div>
+              <span className="text-sm text-white/60 w-10 text-left font-mono">
+                {Math.round(volume * 100)}%
+              </span>
             </div>
           </div>
         </div>
@@ -582,22 +700,34 @@ const FullscreenPlayer: React.FC<FullscreenPlayerProps> = ({
         input[type="range"]::-webkit-slider-thumb {
           -webkit-appearance: none;
           appearance: none;
-          width: 16px;
-          height: 16px;
+          width: 20px;
+          height: 20px;
           border-radius: 50%;
           background: #ffffff;
           cursor: pointer;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+          transition: all 0.2s ease;
+        }
+        
+        input[type="range"]:hover::-webkit-slider-thumb {
+          transform: scale(1.2);
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
         }
         
         input[type="range"]::-moz-range-thumb {
-          width: 16px;
-          height: 16px;
+          width: 20px;
+          height: 20px;
           border-radius: 50%;
           background: #ffffff;
           cursor: pointer;
           border: none;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+          transition: all 0.2s ease;
+        }
+        
+        input[type="range"]:hover::-moz-range-thumb {
+          transform: scale(1.2);
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
         }
       `}</style>
     </div>

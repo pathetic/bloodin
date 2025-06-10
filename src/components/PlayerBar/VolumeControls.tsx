@@ -81,7 +81,7 @@ const VolumeControls: React.FC<VolumeControlsProps> = ({
       <div className="flex items-center space-x-3">
         <button
           onClick={handleMuteToggle}
-          className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+          className="p-2 rounded-lg text-base-content/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
         >
           {volume === 0 ? (
             <IconVolumeOff size={16} />
@@ -112,7 +112,7 @@ const VolumeControls: React.FC<VolumeControlsProps> = ({
 
         <button
           onClick={onFullscreen}
-          className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+          className="p-2 rounded-lg text-base-content/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
           title="Enter fullscreen mode"
         >
           <IconArrowsMaximize size={16} />
@@ -123,10 +123,10 @@ const VolumeControls: React.FC<VolumeControlsProps> = ({
           onClick={() => setIsRecentSongsOpen(!isRecentSongsOpen)}
           className={`relative p-2 rounded-lg transition-colors cursor-pointer ${
             recentlyPlayed.length === 0
-              ? "text-gray-600 cursor-not-allowed"
+              ? "text-base-content/30 cursor-not-allowed"
               : isRecentSongsOpen
-              ? "text-white bg-white/20 hover:bg-white/30"
-              : "text-white hover:bg-white/10"
+              ? "text-white bg-red-500"
+              : "text-base-content/70 hover:text-white hover:bg-white/10"
           }`}
           disabled={recentlyPlayed.length === 0}
           title={
@@ -145,8 +145,8 @@ const VolumeControls: React.FC<VolumeControlsProps> = ({
           onClick={() => setIsQueueOpen(!isQueueOpen)}
           className={`relative p-2 rounded-lg transition-colors cursor-pointer ${
             isQueueOpen
-              ? "text-white bg-white/20 hover:bg-white/30"
-              : "text-white hover:bg-white/10"
+              ? "text-white bg-red-500"
+              : "text-base-content/70 hover:text-white hover:bg-white/10"
           }`}
           title={isQueueOpen ? "Hide queue" : "Show queue"}
         >

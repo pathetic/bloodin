@@ -97,7 +97,7 @@ export default function DetailView({ type }: DetailViewProps) {
   };
 
   const handleBack = () => {
-    navigate("/home"); // Go back to previous page
+    navigate(-1); // Go back to previous page
   };
 
   // Load initial batch for playlists
@@ -391,11 +391,13 @@ export default function DetailView({ type }: DetailViewProps) {
         <div className="flex items-center space-x-4 mb-6">
           <button
             onClick={handleBack}
-            className="cursor-pointer p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
+            className="cursor-pointer p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
           >
             <IconArrowLeft size={20} />
           </button>
-          <h1 className="text-2xl font-bold text-white capitalize">{type}</h1>
+          <h1 className="text-2xl font-bold text-base-content capitalize">
+            {type}
+          </h1>
         </div>
 
         <div className="flex items-start space-x-6">
@@ -418,18 +420,18 @@ export default function DetailView({ type }: DetailViewProps) {
           {/* Details */}
           <div className="flex-1 space-y-4">
             <div>
-              <h2 className="text-4xl font-bold text-white mb-2">
+              <h2 className="text-4xl font-bold text-base-content mb-2">
                 {details?.Name}
               </h2>
               {details && (
-                <div className="text-gray-400 space-y-1">
+                <div className="text-base-content/60 space-y-1">
                   {type === "album" && (
                     <div className="text-lg flex items-center gap-2">
                       <span>by</span>
                       <ArtistLinks
                         item={details}
                         onArtistClick={handleArtistClick}
-                        className="text-gray-300"
+                        className="text-base-content/60"
                       />
                     </div>
                   )}
@@ -466,7 +468,7 @@ export default function DetailView({ type }: DetailViewProps) {
               <button
                 onClick={handleShuffle}
                 disabled={songs.length === 0 || isShuffling}
-                className="cursor-pointer flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-colors bg-white/10 hover:bg-white/20 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                className="cursor-pointer flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-colors bg-base-content/40 hover:bg-base-content/60 text-white disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <IconArrowsShuffle size={20} />
                 <span>{isShuffling ? "Loading..." : "Shuffle"}</span>

@@ -39,17 +39,17 @@ const RecentSongsPanel: React.FC<RecentSongsPanelProps> = ({
     <div className="fixed bottom-24 right-6 z-50">
       <div
         ref={recentSongsRef}
-        className="backdrop-blur-xl bg-black/30 border border-white/10 rounded-xl shadow-2xl w-80 max-h-72 overflow-hidden flex flex-col"
+        className="backdrop-blur-xl bg-base-100/30 border border-white/10 rounded-xl shadow-2xl w-80 max-h-72 overflow-hidden flex flex-col"
       >
         {/* Static Header */}
-        <div className="flex items-center justify-between border-b border-white/10 p-3 bg-black/20 backdrop-blur-sm">
-          <h3 className="text-white font-medium flex items-center gap-2 text-sm">
+        <div className="flex items-center justify-between border-b border-white/10 p-3 bg-base-100/20 backdrop-blur-sm">
+          <h3 className="text-base-content font-medium flex items-center gap-2 text-sm">
             <IconHistory size={14} />
             Recent Songs
           </h3>
           <button
             onClick={onClose}
-            className="p-1 rounded hover:bg-white/10 text-gray-400 hover:text-white transition-colors text-xs"
+            className="p-1 rounded hover:bg-white/10 text-base-content/60 hover:text-white transition-colors text-xs"
           >
             ✕
           </button>
@@ -86,12 +86,12 @@ const RecentSongsPanel: React.FC<RecentSongsPanelProps> = ({
                     className={`font-medium truncate text-sm ${
                       song.id === currentSong?.id
                         ? "text-red-300"
-                        : "text-white"
+                        : "text-base-content"
                     }`}
                   >
                     {song.title}
                   </h4>
-                  <p className="text-xs text-gray-400 truncate">
+                  <p className="text-xs text-base-content/60 truncate">
                     <ClickableArtists
                       artistString={song.artist}
                       artistIds={song.artistIds}

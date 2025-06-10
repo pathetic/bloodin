@@ -36,7 +36,7 @@ const ClickableArtists: React.FC<{
       {artistNames.map((artistName, index) => (
         <React.Fragment key={artistIds[index]}>
           <span
-            className="hover:text-red-400 cursor-pointer"
+            className="hover:text-red-500 cursor-pointer"
             onClick={(e) => {
               e.stopPropagation();
               onArtistClick(artistIds[index], artistName.trim());
@@ -85,7 +85,7 @@ export default function SongRow({
             <span
               className={`text-sm ${
                 isCurrentSong
-                  ? "text-red-400 font-bold"
+                  ? "text-red-500 font-bold"
                   : "text-gray-400 group-hover:hidden"
               }`}
             >
@@ -94,7 +94,7 @@ export default function SongRow({
             <button
               className={`p-1 rounded-full hover:bg-red-500 transition-colors ${
                 isCurrentSong
-                  ? "text-red-400"
+                  ? "text-red-500"
                   : "text-white hidden group-hover:block"
               }`}
             >
@@ -118,7 +118,7 @@ export default function SongRow({
         <div className="flex-1 min-w-0">
           <h4
             className={`font-medium truncate ${
-              isCurrentSong ? "text-red-300" : "text-white"
+              isCurrentSong ? "text-red-500" : "text-base-content"
             }`}
           >
             {song.title}
@@ -150,7 +150,7 @@ export default function SongRow({
       <div className="col-span-1 flex items-center">
         <span
           className={`text-gray-400 text-sm ${
-            isCurrentSong ? "text-red-400 font-bold" : ""
+            isCurrentSong ? "text-red-500 font-bold" : ""
           }`}
         >
           {index}

@@ -55,11 +55,11 @@ const NowPlayingInfo: React.FC<NowPlayingInfoProps> = ({
     return (
       <div className="flex items-center min-w-0 w-80">
         <div className="w-14 h-14 bg-gradient-to-br from-gray-500 to-gray-700 rounded-lg flex items-center justify-center flex-shrink-0 shadow-lg mr-3">
-          <IconMusic size={24} className="text-gray-400" />
+          <IconMusic size={24} className="text-base-content/60" />
         </div>
         <div className="min-w-0 flex-1 mr-3">
-          <h4 className="font-medium text-gray-400">No song selected</h4>
-          <p className="text-sm text-gray-500">Select a song to play</p>
+          <h4 className="font-medium text-base-content/60">No song selected</h4>
+          <p className="text-sm text-base-content/50">Select a song to play</p>
         </div>
       </div>
     );
@@ -105,7 +105,11 @@ const NowPlayingInfo: React.FC<NowPlayingInfoProps> = ({
             ref={titleRef}
             className={`font-medium whitespace-nowrap transition-all duration-300 ${
               shouldScroll && isTitleHovered ? "animate-scroll" : "truncate"
-            } ${isShowingLastPlayed ? "text-gray-300" : "text-white"}`}
+            } ${
+              isShowingLastPlayed
+                ? "text-base-content/70"
+                : "text-base-content/100"
+            }`}
             style={{
               ...(shouldScroll &&
                 isTitleHovered && {
@@ -126,7 +130,9 @@ const NowPlayingInfo: React.FC<NowPlayingInfoProps> = ({
         </div>
         <p
           className={`text-sm truncate ${
-            isShowingLastPlayed ? "text-gray-500" : "text-gray-400"
+            isShowingLastPlayed
+              ? "text-base-content/50"
+              : "text-base-content/60"
           }`}
         >
           <ClickableArtists
@@ -136,7 +142,7 @@ const NowPlayingInfo: React.FC<NowPlayingInfoProps> = ({
           />
         </p>
       </div>
-      <button className="p-1.5 rounded-lg hover:bg-white/10 text-gray-400 hover:text-red-400 transition-colors flex-shrink-0 cursor-pointer">
+      <button className="p-1.5 rounded-lg hover:bg-white/10 text-base-content/60 hover:text-red-400 transition-colors flex-shrink-0 cursor-pointer">
         <IconHeart size={16} />
       </button>
     </div>

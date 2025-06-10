@@ -125,14 +125,14 @@ function SongRow({
     <tr
       className={`transition-colors cursor-pointer group border-b border-white/5 h-[72px] ${
         isCurrentSong
-          ? "bg-red-500/10 hover:bg-red-500/15 border-l-4 border-red-500"
+          ? "bg-red-500/10 hover:bg-red-500/15 border-red-500"
           : "hover:bg-white/5"
       }`}
       onClick={handleRowClick}
     >
       <td className="p-4 align-middle w-12">
         <span
-          className={`text-gray-400 text-sm ${
+          className={`text-base-content/60 text-sm ${
             isCurrentSong ? "text-red-400 font-bold" : ""
           }`}
         >
@@ -157,7 +157,7 @@ function SongRow({
           <div className="min-w-0 flex-1">
             <h4
               className={`font-medium truncate ${
-                isCurrentSong ? "text-red-300" : "text-white"
+                isCurrentSong ? "text-red-500" : "text-base-content"
               }`}
               title={song.Name}
             >
@@ -168,7 +168,7 @@ function SongRow({
                 <ArtistLinks
                   item={song}
                   onArtistClick={onArtistClick}
-                  className="text-sm text-gray-400 truncate block"
+                  className="text-sm text-base-content/60 truncate block"
                 />
               </div>
             )}
@@ -181,7 +181,7 @@ function SongRow({
           <ArtistLinks
             item={song}
             onArtistClick={onArtistClick}
-            className="text-gray-300 truncate block"
+            className="text-base-content/70 truncate block"
           />
         </div>
       </td>
@@ -189,7 +189,7 @@ function SongRow({
       {showAlbumColumn && (
         <td className="p-4 align-middle max-w-0 w-1/4">
           <span
-            className="text-gray-300 truncate block"
+            className="text-base-content/70 truncate block"
             title={song.Album || "Unknown Album"}
           >
             {song.Album || "Unknown Album"}
@@ -198,7 +198,7 @@ function SongRow({
       )}
 
       <td className="p-4 align-middle text-right w-20">
-        <span className="text-gray-400 text-sm">
+        <span className="text-base-content/60 text-sm">
           {formatDuration(song.RunTimeTicks)}
         </span>
       </td>
@@ -258,21 +258,21 @@ export default function SongsTable({
       <table className={`w-full table-pin-cols ${className}`}>
         <thead className="sticky top-0 z-20 bg-black/40 backdrop-blur-md">
           <tr className="border-b border-white/10">
-            <th className="p-4 text-left text-sm font-medium text-gray-400 uppercase tracking-wider w-12">
+            <th className="p-4 text-left text-sm font-medium text-base-content/50 uppercase tracking-wider w-12">
               #
             </th>
-            <th className="p-4 text-left text-sm font-medium text-gray-400 uppercase tracking-wider w-2/5">
+            <th className="p-4 text-left text-sm font-medium text-base-content/50 uppercase tracking-wider w-2/5">
               Title
             </th>
-            <th className="p-4 text-left text-sm font-medium text-gray-400 uppercase tracking-wider w-1/4">
+            <th className="p-4 text-left text-sm font-medium text-base-content/50 uppercase tracking-wider w-1/4">
               Artist
             </th>
             {showAlbumColumn && (
-              <th className="p-4 text-left text-sm font-medium text-gray-400 uppercase tracking-wider w-1/4">
+              <th className="p-4 text-left text-sm font-medium text-base-content/50 uppercase tracking-wider w-1/4">
                 Album
               </th>
             )}
-            <th className="p-4 text-right text-sm font-medium text-gray-400 uppercase tracking-wider w-20">
+            <th className="p-4 text-right text-sm font-medium text-base-content/50 uppercase tracking-wider w-20">
               Duration
             </th>
           </tr>
@@ -290,21 +290,21 @@ export default function SongsTable({
     <table className={`w-full table-pin-cols ${className}`}>
       <thead className="sticky top-0 z-20 bg-black/40 backdrop-blur-md">
         <tr className="border-b border-white/10">
-          <th className="p-4 text-left text-sm font-medium text-gray-400 uppercase tracking-wider w-12">
+          <th className="p-4 text-left text-sm font-medium text-base-content/50 uppercase tracking-wider w-12">
             #
           </th>
-          <th className="p-4 text-left text-sm font-medium text-gray-400 uppercase tracking-wider w-2/5">
+          <th className="p-4 text-left text-sm font-medium text-base-content/50 uppercase tracking-wider w-2/5">
             Title
           </th>
-          <th className="p-4 text-left text-sm font-medium text-gray-400 uppercase tracking-wider w-1/4">
+          <th className="p-4 text-left text-sm font-medium text-base-content/50 uppercase tracking-wider w-1/4">
             Artist
           </th>
           {showAlbumColumn && (
-            <th className="p-4 text-left text-sm font-medium text-gray-400 uppercase tracking-wider w-1/4">
+            <th className="p-4 text-left text-sm font-medium text-base-content/50 uppercase tracking-wider w-1/4">
               Album
             </th>
           )}
-          <th className="p-4 text-right text-sm font-medium text-gray-400 uppercase tracking-wider w-20">
+          <th className="p-4 text-right text-sm font-medium text-base-content/50 uppercase tracking-wider w-20">
             Duration
           </th>
         </tr>

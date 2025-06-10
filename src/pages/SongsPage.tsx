@@ -124,8 +124,8 @@ export default function SongsPage() {
       <div className="flex-shrink-0 p-6 bg-black/15 backdrop-blur-md border-b border-white/10">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-white">Songs</h1>
-            <p className="text-gray-400 mt-1">
+            <h1 className="text-3xl font-bold text-base-content">Songs</h1>
+            <p className="text-base-content/60 mt-1">
               {isSearchMode
                 ? `${searchResults.length} song${
                     searchResults.length !== 1 ? "s" : ""
@@ -142,7 +142,7 @@ export default function SongsPage() {
               placeholder="Search songs..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2 pr-10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              className="w-full bg-white/10 border border-base-content/40 rounded-xl px-4 py-2 pr-10 text-base-content placeholder-base-content/60 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
             />
             <button
               type="submit"
