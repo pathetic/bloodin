@@ -2,7 +2,6 @@ use crate::audio_player::{AudioPlayer, PlaybackState, QueueItem, RepeatMode};
 use crate::jellyfin::{JellyfinClient, ServerInfo, UserProfile, MusicItem};
 use crate::storage;
 use crate::audio_cache::AudioCache;
-use std::os::windows::process::CommandExt;
 use std::sync::{Arc, Mutex};
 use tokio::sync::Mutex as TokioMutex;
 use tauri::State;
@@ -492,8 +491,8 @@ pub async fn search_music(
 
 #[tauri::command]
 pub async fn get_image_url(
-    itemId: String,
-    imageType: String,
+    item_id: String,
+    image_type: String,
     state: State<'_, AppState>,
 ) -> Result<String, String> {
     let client_config = {
@@ -511,7 +510,7 @@ pub async fn get_image_url(
     let mut client = JellyfinClient::new();
     client.set_config(config);
 
-    match client.get_image_url(&itemId, &imageType) {
+    match client.get_image_url(&item_id, &image_type) {
         Ok(url) => Ok(url),
         Err(e) => Err(format!("Failed to get image URL: {}", e)),
     }
@@ -519,7 +518,7 @@ pub async fn get_image_url(
 
 #[tauri::command]
 pub async fn get_stream_url(
-    itemId: String,
+    item_id: String,
     state: State<'_, AppState>,
 ) -> Result<String, String> {
     let client_config = {
@@ -537,7 +536,7 @@ pub async fn get_stream_url(
     let mut client = JellyfinClient::new();
     client.set_config(config);
 
-    match client.get_stream_url(&itemId) {
+    match client.get_stream_url(&item_id) {
         Ok(url) => Ok(url),
         Err(e) => Err(format!("Failed to get stream URL: {}", e)),
     }

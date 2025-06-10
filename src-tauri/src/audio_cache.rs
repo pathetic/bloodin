@@ -211,12 +211,12 @@ impl AudioCache {
         }
     }
     
-    pub fn get_cache_stats(&self) -> (usize, u64) {
+    pub fn _get_cache_stats(&self) -> (usize, u64) {
         let total_size: u64 = self.entries.values().map(|e| e.file_size).sum();
         (self.entries.len(), total_size)
     }
     
-    pub fn clear_cache(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn _clear_cache(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         for (song_id, _) in self.entries.clone() {
             self.remove_entry(&song_id);
         }
