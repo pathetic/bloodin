@@ -30,7 +30,6 @@ Make sure you have the following installed:
 
 - [Node.js](https://nodejs.org/) (v18 or higher)
 - [Rust](https://rustup.rs/) (latest stable)
-- [Tauri CLI](https://tauri.app/v1/guides/getting-started/prerequisites/)
 
 ### Installation
 
