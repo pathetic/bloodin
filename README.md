@@ -14,7 +14,7 @@ A beautiful, modern desktop music player client for Jellyfin servers built with 
 
 - 🎶 **High-quality audio playback** with fullscreen player
 - 📚 **Complete library browsing** - songs, albums, artists
-- 🔍 **Smart search** with animated glassmorphism UI
+- 🔍 **Smart search** with animated glassmorphism UI (WIP)
 - 🎨 **Modern interface** with multiple DaisyUI themes
 - ⚡ **Rust performance** - fast, efficient, cross-platform
 
@@ -37,7 +37,7 @@ Make sure you have the following installed:
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/yourusername/bloodin.git
+   git clone https://github.com/pathetic/bloodin
    cd bloodin
    ```
 
